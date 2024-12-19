@@ -2,6 +2,7 @@ import departmentResolvers from './department.resolvers';
 import featureResolvers from './features.resolvers';
 import mediaResolvers from './media.resolvers';
 import permissionResolvers from './permission.resolvers';
+import projectResolvers from './project.resolvers';
 import rolesResolvers from './roles.resolvers';
 import taskCategoryResolvers from './task-category.resolvers';
 import taskGroupResolvers from './task-group.resolvers';
@@ -18,8 +19,10 @@ export default {
     ...userTagResolvers.Query,
     ...mediaResolvers.Query,
     ...userResolvers.Query,
+    ...teamResolvers.Query,
     ...taskCategoryResolvers.Query,
-    ...taskGroupResolvers.Query
+    ...taskGroupResolvers.Query,
+    ...projectResolvers.Query
   },
   Mutation: {
     ...permissionResolvers.Mutation,
@@ -32,5 +35,6 @@ export default {
     ...teamResolvers.Mutation,
     ...taskCategoryResolvers.Mutation,
     ...taskGroupResolvers.Mutation,
+    ...projectResolvers.Mutation
   }
 };

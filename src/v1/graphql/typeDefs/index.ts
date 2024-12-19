@@ -4,11 +4,12 @@ import featureTypeDefs from './features.typedef';
 import mediaTypeDefs from './media.typedef';
 import permissionTypeDefs from './permission.typedef';
 import rolesTypeDefs from './roles.typedef';
-import userTagTypeDefs from './user-tag.typedef';
-import userTypeDefs from './user.typedef';
-import teamTypeDefs from './team.typedef';
 import taskCategoryTypeDefs from './task-category.typedef';
 import taskGroupTypeDefs from './task-group.typedef';
+import teamTypeDefs from './team.typedef';
+import userTagTypeDefs from './user-tag.typedef';
+import userTypeDefs from './user.typedef';
+import projectTypeDefs from './project.typedef';
 
 export default gql`
   type Query {
@@ -19,7 +20,7 @@ export default gql`
     _empty: String
   }
 
-  type responseBooleanType {
+  type apiBooleanResponseType {
     status: Int
     message: String
     data: Boolean
@@ -27,7 +28,7 @@ export default gql`
   }
 
   ${permissionTypeDefs}
-  ${featureTypeDefs} 
+  ${featureTypeDefs}
   ${rolesTypeDefs}
   ${departmentTypeDefs}
   ${userTagTypeDefs}
@@ -36,4 +37,5 @@ export default gql`
   ${teamTypeDefs}
   ${taskCategoryTypeDefs}
   ${taskGroupTypeDefs}
+  ${projectTypeDefs}
 `;

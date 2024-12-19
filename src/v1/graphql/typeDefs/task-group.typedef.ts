@@ -41,10 +41,10 @@ const taskGroupQueries = gql`
 
 const taskGroupMutations = gql`
   extend type Mutation {
-    createTaskGroup(data: taskGroupInput): responseBooleanType
-    updateTaskGroup(id: String!, data: taskGroupInput): responseBooleanType
-    updateStatusTaskGroup(id: String!, status: Boolean): responseBooleanType
-    deletePermanentlyTaskGroup(ids: [String!]): responseBooleanType
+    createTaskGroup(data: taskGroupInput): apiBooleanResponseType
+    updateTaskGroup(id: String!, data: taskGroupInput): apiBooleanResponseType
+    updateStatusTaskGroup(id: String!, status: Boolean): apiBooleanResponseType
+    deletePermanentlyTaskGroup(ids: [String!]): apiBooleanResponseType
   }
 `;
 

@@ -3,7 +3,32 @@ import { teamModelAction } from '../model/team/team-action';
 import { ServerError, ServerResponse } from '../utils/response';
 
 class TeamController {
-  async createTeam(_parent: any, { teamData }: { teamData: any }) {
+  async getAllTeam() {
+    const actionResponse: any = await teamModelAction.getAllTeamAction();
+    return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+  }
+
+  async getSingleTeam(_parent: any, { teamId, name }: { teamId: string; name: string }) {
+    const actionResponse: any = await teamModelAction.getSingleTeamAction({ teamId, name });
+    return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+  }
+
+  async createTeam(
+    _parent: any,
+    {
+      teamData
+    }: {
+      teamData: {
+        name: string;
+        description: string;
+        leader: string[];
+        employee: string[];
+        manager: string[];
+        technologies: string[];
+        createdUser: string;
+      };
+    }
+  ) {
     const apiResponse: any = await teamModelAction.createTeamAction({
       name: teamData?.name,
       description: teamData?.description,

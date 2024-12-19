@@ -177,7 +177,6 @@ export interface ITeam extends Document {
   deleted_at: number | null;
 }
 
-
 export interface ITaskCategory extends Document {
   name: string;
   description: string;
@@ -193,4 +192,22 @@ export interface ITaskGroup extends Document {
   is_active: boolean;
   created_at: number;
   updated_at: number;
+}
+
+export interface IProjectModel extends Document {
+  name: string;
+  description: string;
+  ownerId: mongoose.Types.ObjectId;
+  teamId: mongoose.Types.ObjectId;
+  date: {
+    start_date: number;
+    end_date: number;
+  };
+  is_active: boolean;
+  created_at: number;
+  updated_at: number;
+  deleted_at: {
+    date: number | null;
+    user_id: mongoose.Types.ObjectId | null;
+  };
 }

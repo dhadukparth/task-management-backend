@@ -5,7 +5,6 @@ import STATUS_CODE from '../../../helper/statusCode';
 import { ServerError, ServerResponse } from '../../utils/response';
 
 class TaskGroupModelAction {
-
   async getAllTaskGroupAction(): Promise<any> {
     try {
       const taskGroupList = await taskGroupModel.aggregate([
@@ -27,11 +26,7 @@ class TaskGroupModelAction {
         }
       ]);
 
-      return ServerResponse(
-        STATUS_CODE.CODE_OK,
-        'Task group fetched successfully.',
-        taskGroupList
-      );
+      return ServerResponse(STATUS_CODE.CODE_OK, 'Task group fetched successfully.', taskGroupList);
     } catch (error) {
       return ServerError(
         STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
@@ -108,11 +103,7 @@ class TaskGroupModelAction {
       const newTaskGroupResult = await newTaskGroup.save();
 
       if (newTaskGroupResult) {
-        return ServerResponse(
-          STATUS_CODE.CODE_CREATED,
-          'Task group created successfully.',
-          true
-        );
+        return ServerResponse(STATUS_CODE.CODE_CREATED, 'Task group created successfully.', true);
       }
 
       return ServerError(
@@ -189,13 +180,7 @@ class TaskGroupModelAction {
     }
   }
 
-  async updateStatusTaskGroupAction({
-    id,
-    status
-  }: {
-    id: string;
-    status: boolean;
-  }): Promise<any> {
+  async updateStatusTaskGroupAction({ id, status }: { id: string; status: boolean }): Promise<any> {
     try {
       const isExiting = await taskGroupModel.aggregate([
         {
@@ -227,10 +212,14 @@ class TaskGroupModelAction {
         }
       );
 
-      const statusMsg = status ? 'activated' : 'deactivated'
+      const statusMsg = status ? 'activated' : 'deactivated';
 
       if (!isUpdatingResult) {
-        return ServerError(STATUS_CODE.CODE_NOT_FOUND, `Sorry! This task group is not ${statusMsg}. Please tru again.`, null);
+        return ServerError(
+          STATUS_CODE.CODE_NOT_FOUND,
+          `Sorry! This task group is not ${statusMsg}. Please tru again.`,
+          null
+        );
       }
 
       return ServerResponse(
