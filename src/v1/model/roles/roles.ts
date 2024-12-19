@@ -52,7 +52,7 @@ const rolesSchema = new Schema<IRolesModel>({
     },
     user_id: {
       type: Schema.Types.ObjectId,
-      ref: MODEL_COLLECTION_LIST.LOGIN,
+      ref: MODEL_COLLECTION_LIST.USER,
       default: null
     }
   }

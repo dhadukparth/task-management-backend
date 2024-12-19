@@ -23,11 +23,10 @@ const teamTypes = gql`
     error: String
   }
 
-  type arrayRolesResponseType {
+  type multipleTeamResponse {
     status: Int
     message: String
-    data: [rolesResponse]
-    error: String
+    data: [teamResponse]
   }
 `;
 
@@ -39,7 +38,7 @@ const teamInputs = gql`
     employee: [String]
     manager: [String]
     technologies: [String]
-    createdUser: String!
+    createdUser: String
   }
 
   input teamStatusInput {
@@ -48,18 +47,26 @@ const teamInputs = gql`
   }
 `;
 
+const teamQuery = gql`
+  extend type Query {
+    getAllTeams: multipleTeamResponse
+    getSingleTeams(teamId: String!, name: String!): singleTeamResponse
+  }
+`;
+
 const teamMutations = gql`
   extend type Mutation {
-    createTeam(teamData: teamDataInput): singleTeamResponse
-    updateTeam(teamId: String!, teamData: teamDataInput): singleTeamResponse
-    updateStatusTeam(teamData: teamStatusInput): singleTeamResponse
-    tempDeleteTeam(teamData: teamStatusInput): singleTeamResponse
+    createTeam(teamData: teamDataInput): apiBooleanResponseType
+    updateTeam(teamId: String!, teamData: teamDataInput): apiBooleanResponseType
+    updateStatusTeam(teamData: teamStatusInput): apiBooleanResponseType
+    tempDeleteTeam(teamData: teamStatusInput): apiBooleanResponseType
   }
 `;
 
 const teamTypeDefs = gql`
   ${teamTypes}
   ${teamInputs}
+  ${teamQuery}
   ${teamMutations}
 `;
 

@@ -1,10 +1,66 @@
 import mongoose from 'mongoose';
 import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
-import { ServerResponse } from '../../utils/response';
+import { teamPipelines } from '../../Pipelines';
+import { ServerError, ServerResponse } from '../../utils/response';
 import { teamModel } from './team';
 
 class TeamModelAction {
+  async getAllTeamAction() {
+    try {
+      const teamList = await teamModel.aggregate([
+        {
+          $match: {
+            is_active: true
+          }
+        },
+        ...teamPipelines.team_pipelines,
+        {
+          $sort: {
+            created_at: -1 // Sort by created_at in descending order
+          }
+        }
+      ]);
+
+      return ServerResponse(STATUS_CODE.CODE_OK, 'Team fetched successfully.', teamList);
+    } catch (error: any) {
+      return ServerError(
+        error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        error?.errorResponse?.errmsg || 'Failed to fetch project list.',
+        error
+      );
+    }
+  }
+
+  async getSingleTeamAction(args: { teamId: string; name: string }) {
+    try {
+      const teamData = await teamModel.aggregate([
+        {
+          $match: {
+            $or: [{ _id: args.teamId }, { name: args.name }]
+          }
+        },
+        ...teamPipelines.team_pipelines,
+        {
+          $sort: {
+            created_at: -1 // Sort by created_at in descending order
+          }
+        }
+      ]);
+
+      const result = teamData.length > 0 ? teamData?.[0] : null;
+
+      return ServerResponse(STATUS_CODE.CODE_OK, 'Team fetched successfully.', result);
+    } catch (error: any) {
+      console.log(error);
+      return ServerError(
+        error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        error?.errorResponse?.errmsg || 'Failed to fetch project list.',
+        error
+      );
+    }
+  }
+
   async createTeamAction(args: {
     name: string;
     description: string;
@@ -24,37 +80,36 @@ class TeamModelAction {
         return ServerResponse(
           STATUS_CODE.CODE_NOT_FOUND,
           'Sorry! This team name is already existed.',
-          null
+          false
         );
       }
 
-      const apiResponse = await teamModel.aggregate([
-        {
-          $addFields: {
-            name: args.name,
-            description: args.description,
-            createdUser: args.createdUser,
-            leader: args.leader,
-            employee: args.employee,
-            manager: args.manager,
-            technologies: args.technologies,
-            created_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC'),
-            updated_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC')
-          }
-        },
-        { $merge: { into: 'teams' } }
-      ]);
+      const newTeam = new teamModel({
+        name: args.name,
+        description: args.description,
+        createdUser: args.createdUser,
+        leader: args.leader,
+        employee: args.employee,
+        manager: args.manager,
+        technologies: args.technologies,
+        created_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC'),
+        updated_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC')
+      });
 
-      if (apiResponse) {
-        return ServerResponse(STATUS_CODE.CODE_OK, 'Team created successfully.', apiResponse);
+      const newTeamResult = await newTeam.save();
+
+      if (newTeamResult) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'Team created successfully.', true);
       }
 
       return ServerResponse(
         STATUS_CODE.CODE_NOT_MODIFIED,
         'Failed to create the team. Please try again.',
-        null
+        false
       );
     } catch (error: any) {
+      console.log(error);
+
       return {
         code: error?.errorResponse?.code,
         message: error?.errorResponse?.errmsg,
@@ -82,7 +137,7 @@ class TeamModelAction {
 
       const apiCheckTeam = await teamModel.findOne(checkTeam);
       if (!apiCheckTeam) {
-        return ServerResponse(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This team is not found.', null);
+        return ServerResponse(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This team is not found.', false);
       }
 
       const updateTeamResponse = await teamModel.aggregate([
@@ -108,13 +163,13 @@ class TeamModelAction {
       ]);
 
       if (updateTeamResponse) {
-        return ServerResponse(STATUS_CODE.CODE_OK, `This team is updated successfully.`, null);
+        return ServerResponse(STATUS_CODE.CODE_OK, `This team is updated successfully.`, true);
       }
 
       return ServerResponse(
         STATUS_CODE.CODE_NOT_MODIFIED,
         'Sorry! This team is not updated. please try again.',
-        null
+        false
       );
     } catch (error: any) {
       return {
@@ -135,7 +190,7 @@ class TeamModelAction {
 
       const apiCheckTeam = await teamModel.findOne(checkTeam);
       if (!apiCheckTeam) {
-        return ServerResponse(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This team is not found.', null);
+        return ServerResponse(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This team is not found.', false);
       }
 
       const changeStatus = !apiCheckTeam?.is_active;
@@ -155,14 +210,14 @@ class TeamModelAction {
         return ServerResponse(
           STATUS_CODE.CODE_OK,
           `This team is ${changeStatus ? 'activated' : 'deactivated'} successfully.`,
-          null
+          true
         );
       }
 
       return ServerResponse(
         STATUS_CODE.CODE_NOT_MODIFIED,
         'Sorry! This team status is not changed, please try again.',
-        null
+        false
       );
     } catch (error: any) {
       return {
@@ -182,7 +237,7 @@ class TeamModelAction {
 
       const apiCheckTeam = await teamModel.findOne(checkTeam);
       if (!apiCheckTeam) {
-        return ServerResponse(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This team is not found.', null);
+        return ServerResponse(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This team is not found.', false);
       }
 
       const changeStatus = !apiCheckTeam?.is_active;
@@ -203,14 +258,14 @@ class TeamModelAction {
         return ServerResponse(
           STATUS_CODE.CODE_OK,
           `This team is ${changeStatus ? 'activated' : 'deactivated'} successfully.`,
-          null
+          true
         );
       }
 
       return ServerResponse(
         STATUS_CODE.CODE_NOT_MODIFIED,
         'Sorry! This team status is not changed, please try again.',
-        null
+        false
       );
     } catch (error: any) {
       return {

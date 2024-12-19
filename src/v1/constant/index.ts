@@ -4,14 +4,14 @@ export const MODEL_COLLECTION_LIST = {
   PERMISSION: 'tbl_permissions',
   FEATURES: 'tbl_features',
   ROLES: 'tbl_roles',
-  DEPARTMENT: 'tbl_department',
-  LOGIN: 'tbl_login',
+  DEPARTMENT: 'tbl_departments',
   CREDENTIALS: 'tbl_credentials',
   USER: 'tbl_users',
   USER_TAGS: 'tbl_user_tags',
-  TEAM: 'tbl_team',
-  TASK_CATEGORY: "tbl_task_category",
-  TASK_GROUP: "tbl_task_group",
+  TEAM: 'tbl_teams',
+  TASK_CATEGORY: "tbl_task_categories",
+  TASK_GROUP: "tbl_task_groups",
+  PROJECT: "tbl_projects"
 };
 
 export const FILE_UPLOAD_PATH = {

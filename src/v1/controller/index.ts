@@ -8,3 +8,4 @@ export * from './user.controller';
 export * from './team.controller';
 export * from './task-category.controller';
 export * from './task-group.controller';
+export * from './project.controller';

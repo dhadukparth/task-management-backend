@@ -3,7 +3,8 @@ import { bcryptFn } from '../../../helper/bcrypt';
 import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
 import { generateUniqueKey } from '../../../helper/uuid';
-import { APP_TIMERS, MODEL_COLLECTION_LIST } from '../../constant';
+import { APP_TIMERS } from '../../constant';
+import { userPipelines } from '../../Pipelines';
 import { ServerError, ServerResponse } from '../../utils/response';
 import { AppTokens } from '../../utils/tokens';
 import { userModel } from './user';
@@ -60,96 +61,15 @@ class UserModelAction extends UserCredentialsAction {
   async fetchAllUsersAction() {
     try {
       const getAllUsers = await userModel.aggregate([
-        {
-          $match: {}
-        },
-        {
-          $lookup: {
-            from: MODEL_COLLECTION_LIST.ROLES, // The collection name for roles
-            localField: 'role', // The field in the users collection that holds the ObjectId
-            foreignField: '_id', // The field in tbl_roles to match with role
-            as: 'roleData' // The output array field for matched role documents
-          }
-        },
-        // {
-        //   $lookup: {
-        //     from: MODEL_COLLECTION_LIST.DEPARTMENT,
-        //     localField: 'department',
-        //     foreignField: '_id',
-        //     as: 'departmentData'
-        //   }
-        // },
-        // {
-        //   $lookup: {
-        //     from: MODEL_COLLECTION_LIST.USER_TAGS,
-        //     localField: 'tag',
-        //     foreignField: '_id',
-        //     as: 'tagData'
-        //   }
-        // },
-        {
-          $addFields: {
-            createdAt: {
-              $dateToString: {
-                format: '%Y-%m-%d %H:%M:%S',
-                date: { $toDate: '$created_at' } // Convert `created_at` timestamp to a formatted string
-              }
-            },
-            date_of_birth: {
-              $cond: {
-                if: { $eq: ['$dob', null] }, // Check if `dob` is null
-                then: '', // Set to an empty string if null
-                else: {
-                  $dateToString: {
-                    format: '%Y-%m-%d', // Format the date as YYYY-MM-DD
-                    date: { $toDate: '$dob' } // Convert `dob` timestamp to a date
-                  }
-                }
-              }
-            },
-            social_media: {
-              $cond: {
-                if: { $eq: ['$social_media', null] }, // Check if `social_media` is null
-                then: [], // Set to an empty array if null
-                else: '$social_media' // Retain the original value if not null
-              }
-            },
-            gender: {
-              $cond: {
-                if: { $eq: ['$gender', null] }, // Check if `gender` is null
-                then: '', // Set to an empty string if null
-                else: '$gender' // Retain the original value if not null
-              }
-            }
-          }
-        },
-        {
-          $project: {
-            'name.first_name': 1,
-            'name.middle_name': 1,
-            'name.last_name': 1,
-            'email.email_address': 1,
-            'contact.contact_code': 1,
-            'contact.contact_number': 1,
-            gender: 1,
-            dob: 1,
-            blood_group: 1,
-            'roleData.name': 1,
-            'place_details.address': 1,
-            'place_details.location': 1,
-            'place_details.city': 1,
-            'place_details.state': 1,
-            'place_details.country': 1,
-            'place_details.zip_code': 1,
-            social_media: 1
-          }
-        },
+        ...userPipelines.user_pipelines,
         {
           $sort: {
             created_at: -1
           }
         }
       ]);
+
+      console.log(JSON.stringify(getAllUsers))
 
       return ServerResponse(STATUS_CODE.CODE_OK, 'All users fetched successfully', getAllUsers);
     } catch (error: any) {

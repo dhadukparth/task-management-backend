@@ -39,10 +39,10 @@ const taskCategoryQueries = gql`
 
 const taskCategoryMutations = gql`
   extend type Mutation {
-    createTaskCategory(data: taskCategoryInput): responseBooleanType
-    updateTaskCategory(id: String!, data: taskCategoryInput): responseBooleanType
-    updateStatusTaskCategory(id: String!, status: Boolean): responseBooleanType
-    deletePermanentlyTaskCategory(ids: [String!]): responseBooleanType
+    createTaskCategory(data: taskCategoryInput): apiBooleanResponseType
+    updateTaskCategory(id: String!, data: taskCategoryInput): apiBooleanResponseType
+    updateStatusTaskCategory(id: String!, status: Boolean): apiBooleanResponseType
+    deletePermanentlyTaskCategory(ids: [String!]): apiBooleanResponseType
   }
 `;
 

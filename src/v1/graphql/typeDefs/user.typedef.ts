@@ -11,6 +11,7 @@ const userTypes = gql`
   }
 
   type userRoleData {
+    _id: ID
     name: String!
   }
 
@@ -43,10 +44,15 @@ const userTypes = gql`
     name: userName
     email: userEmail
     contact: userContact
-    dob: String
+    role: userRoleData
+    tag: singleUserTagResponse
+    department: departmentResponse
     gender: String
+    dob: String
     blood_group: String
     place_details: placeDetails
+    created_at: String
+    is_active: Boolean
   }
 
   type loginTokenObject {
