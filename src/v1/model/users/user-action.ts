@@ -69,8 +69,6 @@ class UserModelAction extends UserCredentialsAction {
         }
       ]);
 
-      console.log(JSON.stringify(getAllUsers))
-
       return ServerResponse(STATUS_CODE.CODE_OK, 'All users fetched successfully', getAllUsers);
     } catch (error: any) {
       return {
@@ -155,9 +153,10 @@ class UserModelAction extends UserCredentialsAction {
     }
   }
 
-  async updateUserAction(args: UpdateUserType) {
+  async updateUserAction(args: { id: string } & UpdateUserType) {
     try {
       const checkUser = {
+        _id: args.id,
         'email.email_address': args.email,
         'email.verify': true,
         is_active: true,

@@ -169,7 +169,7 @@ const userQueries = gql`
 const userMutations = gql`
   extend type Mutation {
     createUser(userData: userCreateInput): singleUserBooleanResponseType
-    updateUser(userData: userUpdateInput): singleUserBooleanResponseType
+    updateUser(userId: String!, userData: userUpdateInput): singleUserBooleanResponseType
     activeUserStatus(email: String): singleUserBooleanResponseType
     tempDeleteUser(userData: tempDeleteUserInput): singleUserBooleanResponseType
     recoverDeleteUser(userData: userRecoverInput): singleUserBooleanResponseType

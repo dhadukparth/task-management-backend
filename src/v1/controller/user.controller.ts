@@ -120,8 +120,9 @@ class UserController extends UserCredentialsController {
    * @param userData - The updated user details, such as name, role, and contact information.
    *
    */
-  async updateUser(_parent: any, { userData }: { userData: any }) {
+  async updateUser(_parent: any, { userId, userData }: { userId: string; userData: any }) {
     const payload = {
+      id: userId,
       first_name: userData.firstName,
       middle_name: userData.middleName,
       last_name: userData.lastName,

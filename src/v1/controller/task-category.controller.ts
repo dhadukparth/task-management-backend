@@ -34,6 +34,8 @@ class TaskCategoryController {
       description: data.description
     };
 
+    console.log(data)
+
     const actionResponse = await TaskCategoryModelAction.createTaskCategoryAction(newRecordData);
 
     if (actionResponse?.status !== STATUS_CODE.CODE_CREATED) {
