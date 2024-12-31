@@ -22,7 +22,13 @@ export const user_pipelines = [
               }
             }
           },
-          in: { $arrayElemAt: ['$$activeRoles', 0] } // Get the first matching active role or null
+          in: {
+            $cond: {
+              if: { $gt: [{ $size: '$$activeRoles' }, 0] }, // Check if there are any active roles
+              then: { $arrayElemAt: ['$$activeRoles', 0] }, // Return the first active role
+              else: null // Return false if no active roles are found
+            }
+          }
         }
       }
     }
@@ -48,7 +54,13 @@ export const user_pipelines = [
               }
             }
           },
-          in: { $arrayElemAt: ['$$activeDepartments', 0] } // Get the first matching active department or null
+          in: {
+            $cond: {
+              if: { $gt: [{ $size: '$$activeDepartments' }, 0] },
+              then: { $arrayElemAt: ['$$activeDepartments', 0] }, // Get the first matching active department or null
+              else: null // Return false if no active departments are found
+            }
+          }
         }
       }
     }
@@ -74,7 +86,13 @@ export const user_pipelines = [
               }
             }
           },
-          in: { $arrayElemAt: ['$$activeTags', 0] } // Get the first matching active tag or null
+          in: { 
+            $cond: {
+              if: { $gt: [{ $size: '$$activeTags' }, 0] }, // Check if there are any active roles
+              then: { $arrayElemAt: ['$$activeTags', 0] }, // Return the first active role
+              else: null // Return false if no active roles are found
+            } 
+          }
         }
       }
     }

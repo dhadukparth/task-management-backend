@@ -22,6 +22,18 @@ class UserController extends UserCredentialsController {
     }
   }
 
+  async getSingleUsers(_parent: any, { userId }: { userId: string }) {
+    const apiResponse: any = await userAction.fetchSingleUsersAction({
+      userId
+    });
+
+    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(STATUS_CODE.CODE_OK, 'Users fetched successfully.', apiResponse?.data);
+    } else {
+      return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    }
+  }
+
   /**
    * Creates a new user in the system.
    *

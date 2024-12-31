@@ -79,6 +79,42 @@ class UserModelAction extends UserCredentialsAction {
     }
   }
 
+  async fetchSingleUsersAction(args: { userId: string }) {
+    try {
+      const getSingleUsersResult = await userModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(args.userId)
+          }
+        },
+        ...userPipelines.user_pipelines,
+        {
+          $sort: {
+            created_at: -1
+          }
+        }
+      ]);
+
+      console.log(JSON.stringify(getSingleUsersResult));
+
+      if (getSingleUsersResult.length) {
+        return ServerResponse(
+          STATUS_CODE.CODE_OK,
+          'Single users fetched successfully',
+          getSingleUsersResult[0]
+        );
+      } else {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'Sorry, this user does not exist', null);
+      }
+    } catch (error: any) {
+      return {
+        code: error?.errorResponse?.code,
+        message: error?.errorResponse?.errmsg,
+        error: error
+      };
+    }
+  }
+
   async createUserAction(args: CreateUserType) {
     try {
       const checkUser = {

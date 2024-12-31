@@ -163,6 +163,7 @@ const userInputTypes = gql`
 const userQueries = gql`
   extend type Query {
     allUsers: multipleUserResponseType
+    singleUsers(userId: String!): singleUserResponseType
   }
 `;
 
