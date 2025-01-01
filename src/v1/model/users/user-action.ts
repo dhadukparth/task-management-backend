@@ -95,8 +95,6 @@ class UserModelAction extends UserCredentialsAction {
         }
       ]);
 
-      console.log(JSON.stringify(getSingleUsersResult));
-
       if (getSingleUsersResult.length) {
         return ServerResponse(
           STATUS_CODE.CODE_OK,

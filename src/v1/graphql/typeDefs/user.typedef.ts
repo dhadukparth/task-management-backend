@@ -147,12 +147,6 @@ const userInputTypes = gql`
     password: String
   }
 
-  input changeUserPasswordInput {
-    email: String
-    currentPassword: String
-    newPassword: String
-  }
-
   input resetUserPasswordInput {
     email: String
     verify_token: String
@@ -174,7 +168,6 @@ const userMutations = gql`
     activeUserStatus(email: String): singleUserBooleanResponseType
     tempDeleteUser(userData: tempDeleteUserInput): singleUserBooleanResponseType
     recoverDeleteUser(userData: userRecoverInput): singleUserBooleanResponseType
-    changeUserPassword(userData: changeUserPasswordInput): singleUserBooleanResponseType
 
     sendVerifyEmail(email: String): singleUserBooleanResponseType
     verifyEmailAddress(verify: String): singleUserBooleanResponseType

@@ -9,6 +9,7 @@ import taskGroupTypeDefs from './task-group.typedef';
 import teamTypeDefs from './team.typedef';
 import userTagTypeDefs from './user-tag.typedef';
 import userTypeDefs from './user.typedef';
+import authTypeDefs from './auth.typedef';
 import projectTypeDefs from './project.typedef';
 
 export default gql`
@@ -34,6 +35,7 @@ export default gql`
   ${userTagTypeDefs}
   ${mediaTypeDefs}
   ${userTypeDefs}
+  ${authTypeDefs}
   ${teamTypeDefs}
   ${taskCategoryTypeDefs}
   ${taskGroupTypeDefs}

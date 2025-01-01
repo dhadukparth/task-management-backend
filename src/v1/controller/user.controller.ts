@@ -4,14 +4,8 @@ import userAction from '../model/users/user-action';
 import { IUserAction } from '../types/model/model-action';
 import { generatePassword } from '../utils/common';
 import { ServerError, ServerResponse } from '../utils/response';
-import { AppTokens } from '../utils/tokens';
-import UserCredentialsController from './user-credentials.controller';
 
-class UserController extends UserCredentialsController {
-  constructor() {
-    super();
-  }
-
+class UserController {
   async getAllUsers() {
     const apiResponse: any = await userAction.fetchAllUsersAction();
 
@@ -68,58 +62,6 @@ class UserController extends UserCredentialsController {
 
     if (apiResponse?.status === STATUS_CODE.CODE_CREATED) {
       return ServerResponse(apiResponse?.status, apiResponse?.message, apiResponse?.data);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
-  }
-
-  /**
-   * Sends a verification email to a newly created user.
-   *
-   * @param _parent - The parent resolver, typically unused.
-   * @param args - Arguments containing email details for sending the verification email.
-   *
-   */
-  async sendVerifyEmail(_parent: any, { email }: { email: string }) {
-    const payload = {
-      email: email
-    };
-
-    const apiResponse: any = await userAction.sendVerifyEmailAction(payload);
-
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(
-        STATUS_CODE.CODE_OK,
-        'Verification email sent successfully.',
-        apiResponse?.data
-      );
-    }
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
-  }
-
-  /**
-   * Verifies a user's email address using a verification key.
-   *
-   * @param _parent - The parent resolver, typically unused.
-   * @param args - Arguments containing the email address and verification key.
-   *
-   */
-  async verifyEmailAddress(_parent: any, { verify }: { verify: string }) {
-    const decodeVerifyKey: any = await AppTokens.verifyToken(verify);
-
-    if (decodeVerifyKey.status !== STATUS_CODE.CODE_OK) {
-      return ServerError(decodeVerifyKey.status, decodeVerifyKey.message, decodeVerifyKey.error);
-    }
-
-    const payload = {
-      email: decodeVerifyKey?.decoded?.email,
-      verifyKey: decodeVerifyKey?.decoded?.verify
-    };
-
-    const apiResponse: any = await userAction.verifyEmailAddressAction(payload);
-
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(STATUS_CODE.CODE_OK, apiResponse?.message, apiResponse?.data);
     }
 
     return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
