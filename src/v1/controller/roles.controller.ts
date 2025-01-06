@@ -7,6 +7,33 @@ import { ServerError, ServerResponse } from '../utils/response';
 
 class RolesController {
   /**
+   *
+   * REVIEW: The fetchAllRoles function is used to fetch all roles data.
+   *
+   */
+  async fetchAllRoles(_parent: any, { status }: { status: number }) {
+    const actionResponse = await RolesModelAction.fetchAllRolesAction({ status });
+    return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+  }
+
+  /**
+   *
+   * REVIEW: The fetchSingleRole function is used to fetch data for a single role.
+   *
+   * @param _parent: The `_parent` parameter is typically unused in most resolvers
+   * @param id: The ID of the role you want to fetch.
+   *
+   */
+  async fetchSingleRoles(_parent: any, { id, name }: { id: string; name: string }) {
+    const actionResponse = await RolesModelAction.fetchSingleRoleAction({ id, name });
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
+    }
+  }
+
+  /**
    * REVIEW: The createPermission function is used to create a new permission.
    *
    * @param _parent: The `_parent` parameter is typically unused in most resolvers
@@ -23,10 +50,10 @@ class RolesController {
 
     const actionResponse = await RolesModelAction.createRolesAction(newRoles);
 
-    if (actionResponse?.code !== STATUS_CODE.CODE_CREATED) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_CREATED) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
     } else {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
   }
 
@@ -52,30 +79,11 @@ class RolesController {
 
     const actionResponse = await RolesModelAction.updateRolesAction(updateRolesData);
 
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The fetchAllRoles function is used to fetch all roles data.
-   *
-   */
-  async fetchAllRoles() {
-    const actionResponse = await RolesModelAction.fetchAllRolesAction();
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The fetchSingleRole function is used to fetch data for a single role.
-   *
-   * @param _parent: The `_parent` parameter is typically unused in most resolvers
-   * @param id: The ID of the role you want to fetch.
-   *
-   */
-  async fetchSingleRoles(_parent: any, { id, name }: { id: string; name: string }) {
-    const actionResponse = await RolesModelAction.fetchSingleRoleAction({ id, name });
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
+    }
   }
 
   /**
@@ -95,47 +103,11 @@ class RolesController {
 
     const actionResponse = await RolesModelAction.updateStatusRoleAction(updateRolesData);
 
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The tempDeleteRoles function is used to temporarily delete a role.
-   *
-   */
-  async fetchRoleAccessController() {
-    const actionPermissionResponse = await permissionsAction.fetchAllPermissionsAction({
-      'deleted_at.date': null,
-      is_active: true
-    });
-
-    const actionFeatureResponse = await featuresAction.fetchAllFeaturesAction();
-
-    if (!actionPermissionResponse && !actionFeatureResponse) {
-      return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'SORRY! PERMISSION AND FEATURES NOT FOUND', {
-        actionPermissionResponse,
-        actionFeatureResponse
-      });
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
-
-    const combineDataList = actionFeatureResponse?.data?.map((feature: any) => ({
-      feature_id: feature,
-      permission_id: actionPermissionResponse.data
-    }));
-
-    if (combineDataList?.length === 0) {
-      return ServerError(
-        STATUS_CODE.CODE_NOT_FOUND,
-        'SORRY! PERMISSION AND FEATURES NOT FOUND',
-        combineDataList
-      );
-    }
-
-    return ServerResponse(
-      STATUS_CODE.CODE_OK,
-      'Roles Access control fetch successfully.',
-      combineDataList
-    );
   }
 
   /**
@@ -149,21 +121,11 @@ class RolesController {
   async tempDeleteRoles(_parent: any, { id }: { id: string }) {
     const actionResponse = await RolesModelAction.tempDeleteRoleAction({ id });
 
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
-
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The deleteAllRoles function is used to restore all temporarily deleted roles.
-   *
-   */
-  async deleteAllRoles() {
-    const actionResponse = await RolesModelAction.deleteRolesListAction();
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
   }
 
   /**
@@ -178,11 +140,11 @@ class RolesController {
   async restoreRoles(_parent: any, { id, name }: IActionRoles['roll_back_roles']) {
     const actionResponse = await RolesModelAction.restoreRoleAction({ id, name });
 
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
-
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
   }
 
   /**
@@ -202,11 +164,11 @@ class RolesController {
   ) {
     const actionResponse = await RolesModelAction.permanentlyDeleteRoleAction({ id, name });
 
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
-
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
   }
 }
 

@@ -6,6 +6,33 @@ import { ServerError, ServerResponse } from '../utils/response';
 class PermissionController {
   /**
    *
+   * REVIEW: The fetchAllPermission function retrieves a list of all permissions that have not been deleted.
+   *
+   */
+  async fetchAllPermission(_parent: any, { status }: { status: number }) {
+    const actionResponse = await PermissionModelAction.fetchAllPermissionsAction({ status });
+    return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+  }
+
+  /**
+   *
+   * REVIEW: The fetchSinglePermission function retrieves a single permission by its ID.
+   *
+   * @param _parent: The `_parent` parameter is typically unused in most resolvers.
+   * @param id: The ID of the permission you want to fetch.
+   *
+   */
+  async fetchSinglePermission(_parent: any, { id }: IActionPermission['single_permission']) {
+    const actionResponse = await PermissionModelAction.fetchSinglePermissionAction({ id });
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
+    }
+  }
+
+  /**
+   *
    * REVIEW: The createPermission function is used to create a new permission.
    *
    * @param _parent: The `_parent` parameter is typically unused in most resolvers
@@ -22,11 +49,12 @@ class PermissionController {
     };
 
     const actionResponse = await PermissionModelAction.createPermissionAction(newPermission);
+    console.log(actionResponse)
 
-    if (actionResponse?.code !== STATUS_CODE.CODE_CREATED) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_CREATED) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
     } else {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
   }
 
@@ -48,30 +76,11 @@ class PermissionController {
       description: permissionData.description
     };
     const actionResponse = await PermissionModelAction.updatePermissionAction(updatePermissionData);
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The fetchAllPermission function retrieves a list of all permissions that have not been deleted.
-   *
-   */
-  async fetchAllPermission() {
-    const actionResponse = await PermissionModelAction.fetchAllPermissionsAction();
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The fetchSinglePermission function retrieves a single permission by its ID.
-   *
-   * @param _parent: The `_parent` parameter is typically unused in most resolvers.
-   * @param id: The ID of the permission you want to fetch.
-   *
-   */
-  async fetchSinglePermission(_parent: any, { id }: IActionPermission['single_permission']) {
-    const actionResponse = await PermissionModelAction.fetchSinglePermissionAction({ id });
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
+    }
   }
 
   /**
@@ -95,7 +104,11 @@ class PermissionController {
     const actionResponse =
       await PermissionModelAction.updateStatusPermissionAction(updatePermissionData);
 
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
+    }
   }
 
   /**
@@ -108,20 +121,11 @@ class PermissionController {
    */
   async tempDeletePermission(_parent: any, { id }: IActionPermission['temp_delete_permission']) {
     const actionResponse = await PermissionModelAction.tempDeletePermissionAction({ id });
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: rollBackAllPermission function is used to rollback all permissions to their previous state.
-   *
-   */
-  async rollBackAllPermission() {
-    const actionResponse = await PermissionModelAction.rollBackAllPermissionsAction();
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
   }
 
   /**
@@ -138,11 +142,11 @@ class PermissionController {
   async rollbackPermission(_parent: any, { id, name }: IActionPermission['roll_back_permission']) {
     const actionResponse = await PermissionModelAction.rollbackPermissionAction({ id, name });
 
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
-
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
   }
 
   /**
@@ -162,11 +166,11 @@ class PermissionController {
   ) {
     const actionResponse = await PermissionModelAction.rollbackDeletePermissionAction({ id, name });
 
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
-
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
   }
 }
 

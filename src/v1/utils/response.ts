@@ -1,16 +1,36 @@
-export const ServerResponse = (status: number, message: string, data: any): object => {
+export type ServerResponseType = {
+  status: number;
+  message: string;
+  data: any;
+  error: any;
+};
+
+export const ServerResponse = (status: number, message: string, data: any): ServerResponseType => {
   return {
     status: status,
     message: message,
-    data: data
+    data: data,
+    error: null
   };
 };
 
-export const ServerError = (status: number, message: string, error: any): object => {
+export type ServerErrorType = {
+  status: number;
+  message: string;
+  data: false;
+  error: any;
+};
+
+export const ServerError = (
+  status: number,
+  message: string,
+  error: any,
+  data: any = false
+): ServerErrorType => {
   return {
     status,
     message,
-    data: false,
+    data,
     error: typeof error === 'object' ? JSON.stringify(error) : error
   };
 };

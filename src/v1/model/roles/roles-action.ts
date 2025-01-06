@@ -1,8 +1,10 @@
-import { isValidObjectId } from 'mongoose';
+import mongoose from 'mongoose';
 import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
 import { MODEL_COLLECTION_LIST } from '../../constant';
+import { rolePipelines } from '../../Pipelines';
 import { IActionRoles } from '../../types/model/model-action';
+import { ServerError, ServerResponse } from '../../utils/response';
 import { rolesModel } from './roles';
 
 const checkRecordFound = async (checkData: any): Promise<any> => {
@@ -10,32 +12,123 @@ const checkRecordFound = async (checkData: any): Promise<any> => {
     const fetchRoles = await rolesModel.findOne(checkData);
 
     if (fetchRoles === null) {
-      return {
-        code: STATUS_CODE.CODE_NOT_FOUND,
-        message: 'ROLES NOT FOUND',
-        data: null
-      };
+      return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'ROLES NOT FOUND', null);
     }
 
     if (fetchRoles.deleted_at && fetchRoles.deleted_at.date !== null) {
-      return {
-        code: STATUS_CODE.CODE_CONFLICT,
-        message: 'ROLES ALREADY DELETED',
-        data: null
-      };
+      return ServerError(STATUS_CODE.CODE_CONFLICT, 'ROLES ALREADY DELETED', null);
     }
 
     return true;
   } catch (error: any) {
-    return {
-      code: error?.errorResponse?.code,
-      message: error?.errorResponse?.errmsg,
-      error: error
-    };
+    return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
   }
 };
 
 class RolesModelAction {
+  /**
+   *
+   *  Fetch data all functions here
+   *
+   */
+
+  /**
+   *
+   * @param status: passing number indicating  1: not deleted, 2: deleted
+   *
+   */
+  async fetchAllRolesAction({ status }: { status: number }): Promise<any> {
+    try {
+      const rolesList = await rolesModel.aggregate([
+        {
+          $match: {
+            // is_active: true,
+            $expr: {
+              $cond: [
+                { $eq: [status, 1] }, // If status is 1
+                {
+                  $and: [
+                    { $eq: ['$deleted_at.date', null] }, // Check if deleted_at.date is null
+                    {
+                      $or: [
+                        { $eq: ['$deleted_at.user_id', null] },
+                        { $ne: ['$deleted_at.user_id', null] }
+                      ]
+                    } // Optional: user_id can be null or not null
+                  ]
+                },
+                {
+                  $and: [
+                    { $ne: ['$deleted_at.date', null] }, // If status is 0, check deleted_at.date is not null
+                    {
+                      $or: [
+                        { $eq: ['$deleted_at.user_id', null] },
+                        { $ne: ['$deleted_at.user_id', null] }
+                      ]
+                    } // Optional: user_id can be null or not null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        ...rolePipelines.rolesList_pipeline,
+        {
+          $sort: {
+            created_at: -1
+          }
+        }
+      ]);
+
+      if (rolesList?.length) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'ROLES FETCH SUCCESSFULLY', rolesList);
+      } else {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'SORRY! ROLES LIST NOT FOUND', null, []);
+      }
+    } catch (error: any) {
+      console.log(error);
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
+    }
+  }
+
+  async fetchSingleRoleAction({ id, name }: IActionRoles['single_roles']): Promise<any> {
+    try {
+      const rolesList = await rolesModel.aggregate([
+        {
+          $match: {
+            $or: [{ _id: new mongoose.Types.ObjectId(id) }, { name: name }],
+            is_active: true,
+            'deleted_at.date': null
+          }
+        },
+        ...rolePipelines.rolesList_pipeline,
+        {
+          $sort: {
+            created_at: -1
+          }
+        }
+      ]);
+
+      if (rolesList?.length) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'ROLES FETCH SUCCESSFULLY', rolesList[0]);
+      } else {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'SORRY! ROLES LIST NOT FOUND', null, []);
+      }
+    } catch (error: any) {
+      return {
+        code: error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        message: error?.errorResponse?.errmsg || 'AN ERROR OCCURRED',
+        error: error
+      };
+    }
+  }
+
+  /**
+   *
+   *  Action all functions here
+   *
+   */
+
   async createRolesAction({
     name,
     description,
@@ -44,16 +137,16 @@ class RolesModelAction {
     try {
       const checkRoles = await checkRecordFound({ name: name });
 
-      if (checkRoles?.code === STATUS_CODE.CODE_CONFLICT) {
+      if (checkRoles?.status === STATUS_CODE.CODE_CONFLICT) {
         return checkRoles;
       }
 
       if (checkRoles === true) {
-        return {
-          code: STATUS_CODE.CODE_CONFLICT,
-          message: 'SORRY! THIS ROLES IS ALREADY EXISTING!',
-          data: null
-        };
+        return ServerError(
+          STATUS_CODE.CODE_CONFLICT,
+          'SORRY! THIS ROLES IS ALREADY EXISTING!',
+          null
+        );
       }
 
       const modelAccessControl = accessControl.map((item) => ({
@@ -68,96 +161,18 @@ class RolesModelAction {
       });
       const savedRoles = await newRoles.save();
 
-      return {
-        code: STATUS_CODE.CODE_CREATED,
-        message: 'ROLES CREATED SUCCESSFULLY',
-        data: savedRoles
-      };
+      if (savedRoles) {
+        return ServerResponse(STATUS_CODE.CODE_CREATED, 'ROLES CREATED SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+          'Sorry! This role is not created. Please try again',
+          null,
+          null
+        );
+      }
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
-    }
-  }
-
-  async fetchAllRolesAction(): Promise<any> {
-    try {
-      const notDeleteRolesList = await rolesModel
-        .find({
-          'deleted_at.date': null
-        })
-        .populate({
-          path: 'access_control.permission_id',
-          model: MODEL_COLLECTION_LIST.PERMISSION
-        })
-        .populate({
-          path: 'access_control.feature_id',
-          model: MODEL_COLLECTION_LIST.FEATURES
-        });
-
-      if (!notDeleteRolesList || notDeleteRolesList?.length === 0) {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'SORRY! ROLES LIST NOT FOUND',
-          data: null
-        };
-      }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'ROLES FETCH SUCCESSFULLY',
-        data: notDeleteRolesList
-      };
-    } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
-    }
-  }
-
-  async fetchSingleRoleAction({ id, name }: IActionRoles['single_roles']): Promise<any> {
-    try {
-      const checkQuery: any = { 'deleted_at.date': null };
-      if (isValidObjectId(id)) {
-        checkQuery.$or = [{ _id: id }];
-      }
-      if (name) {
-        checkQuery.$or = checkQuery.$or ? [...checkQuery.$or, { name }] : [{ name }];
-      }
-      const notDeleteSingleRole = await rolesModel
-        .findOne(checkQuery)
-        .populate({
-          path: 'access_control.permission_id',
-          model: MODEL_COLLECTION_LIST.PERMISSION
-        })
-        .populate({
-          path: 'access_control.feature_id',
-          model: MODEL_COLLECTION_LIST.FEATURES
-        });
-
-      if (!notDeleteSingleRole) {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'SORRY! THIS ROLE NOT FOUND',
-          data: null
-        };
-      }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'ROLE FETCHED SUCCESSFULLY',
-        data: notDeleteSingleRole
-      };
-    } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
-        message: error?.errorResponse?.errmsg || 'AN ERROR OCCURRED',
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -174,46 +189,29 @@ class RolesModelAction {
         return checkRoleAction;
       }
 
-      const updatedRoles = await rolesModel
-        .findByIdAndUpdate(
-          { _id: id, 'deleted_at.date': null },
-          {
-            $set: {
-              name: name,
-              description: description,
-              access_control: accessControl
-            }
-          },
-          { new: true }
-        )
-        .populate({
-          path: 'access_control.permission_id',
-          model: MODEL_COLLECTION_LIST.PERMISSION
-        })
-        .populate({
-          path: 'access_control.feature_id',
-          model: MODEL_COLLECTION_LIST.FEATURES
-        });
+      const updatedRoles = await rolesModel.findByIdAndUpdate(
+        { _id: id, 'deleted_at.date': null },
+        {
+          $set: {
+            name: name,
+            description: description,
+            access_control: accessControl
+          }
+        },
+        { new: true }
+      );
 
-      if (!updatedRoles) {
-        return {
-          code: STATUS_CODE.CODE_NOT_MODIFIED,
-          message: 'SORRY! THIS ROLES IS NOT UPDATE FAILED',
-          data: null
-        };
+      if (updatedRoles) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'ROLE IS UPDATED SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_MODIFIED,
+          'SORRY! THIS ROLES IS NOT UPDATE FAILED',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'ROLE IS UPDATED SUCCESSFULLY',
-        data: updatedRoles
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -225,44 +223,33 @@ class RolesModelAction {
         return checkRoleAction;
       }
 
-      const updatedStatusRoles = await rolesModel
-        .findByIdAndUpdate(
-          { _id: id, 'deleted_at.date': null },
-          {
-            $set: {
-              is_active: status
-            }
-          },
-          { new: true }
-        )
-        .populate({
-          path: 'access_control.permission_id',
-          model: MODEL_COLLECTION_LIST.PERMISSION
-        })
-        .populate({
-          path: 'access_control.feature_id',
-          model: MODEL_COLLECTION_LIST.FEATURES
-        });
+      const updatedStatusRoles = await rolesModel.findByIdAndUpdate(
+        { _id: id, is_active: !status, 'deleted_at.date': null },
+        {
+          $set: {
+            is_active: status
+          }
+        },
+        { new: true }
+      );
 
-      if (!updatedStatusRoles) {
-        return {
-          code: STATUS_CODE.CODE_NOT_MODIFIED,
-          message: 'SORRY! THIS ROLES STATUS IS BEEN NOT UPDATED.',
-          data: null
-        };
+      const statusLabel = status ? 'Active' : 'Deactivated';
+
+      if (updatedStatusRoles) {
+        return ServerResponse(
+          STATUS_CODE.CODE_OK,
+          `This Role is ${statusLabel} successfully.`,
+          true
+        );
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_MODIFIED,
+          'SORRY! THIS ROLES STATUS IS BEEN NOT UPDATED.',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'ROLE STATUS UPDATED SUCCESSFULLY',
-        data: updatedStatusRoles
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -274,39 +261,26 @@ class RolesModelAction {
         return rolesCheck;
       }
 
-      const deleteRolesAction = await rolesModel
-        .findByIdAndUpdate(
-          { _id: id, 'deleted_at.date': null },
-          {
-            $set: {
-              'deleted_at.date': DateTimeUtils.getToday(),
-              'deleted_at.user_id': null
-            }
-          },
-          { new: true }
-        )
-        .populate({
-          path: 'access_control.permission_id',
-          model: MODEL_COLLECTION_LIST.PERMISSION
-        })
-        .populate({
-          path: 'access_control.feature_id',
-          model: MODEL_COLLECTION_LIST.FEATURES
-        });
+      const deleteRolesAction = await rolesModel.findByIdAndUpdate(
+        { _id: id, 'deleted_at.date': null },
+        {
+          $set: {
+            'deleted_at.date': DateTimeUtils.getToday(),
+            'deleted_at.user_id': null
+          }
+        },
+        { new: true }
+      );
 
-      if (!deleteRolesAction) {
-        return {
-          code: STATUS_CODE.CODE_CONFLICT,
-          message: 'SORRY! THIS ROLE COULD NOT BE DELETED!',
-          data: null
-        };
+      if (deleteRolesAction) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'ROLE DELETE SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_CONFLICT,
+          'SORRY! THIS ROLE COULD NOT BE DELETED!',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'ROLE DELETE SUCCESSFULLY',
-        data: deleteRolesAction
-      };
     } catch (error: any) {
       return {
         code: error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
@@ -316,94 +290,36 @@ class RolesModelAction {
     }
   }
 
-  async deleteRolesListAction() {
-    try {
-      const deleteRolesList = await rolesModel
-        .find({
-          'deleted_at.date': { $ne: null }
-        })
-        .populate({
-          path: 'access_control.permission_id',
-          model: MODEL_COLLECTION_LIST.PERMISSION
-        })
-        .populate({
-          path: 'access_control.feature_id',
-          model: MODEL_COLLECTION_LIST.FEATURES
-        });
-
-      if (!deleteRolesList || deleteRolesList?.length === 0) {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'DELETE ROLES LIST NOT FOUND',
-          data: null
-        };
-      }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'DELETE ROLES FETCH SUCCESSFULLY',
-        data: deleteRolesList
-      };
-    } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
-    }
-  }
-
   async restoreRoleAction({ id, name }: IActionRoles['roll_back_roles']): Promise<any> {
     try {
       const rolesCheckAction = await checkRecordFound({ _id: id, name: name });
 
-      if (rolesCheckAction?.code !== STATUS_CODE.CODE_CONFLICT) {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'ROLES NOT FOUND',
-          data: null
-        };
+      if (rolesCheckAction?.status !== STATUS_CODE.CODE_CONFLICT) {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'ROLES NOT FOUND', null);
       }
 
-      const rollbackRolesAction = await rolesModel
-        .findByIdAndUpdate(
-          { _id: id, name: name, 'deleted_at.date': { $ne: null } },
-          {
-            $set: {
-              'deleted_at.date': null,
-              'deleted_at.user_id': null
-            }
-          },
-          { new: true }
-        )
-        .populate({
-          path: 'access_control.permission_id',
-          model: MODEL_COLLECTION_LIST.PERMISSION
-        })
-        .populate({
-          path: 'access_control.feature_id',
-          model: MODEL_COLLECTION_LIST.FEATURES
-        });
+      const rollbackRolesAction = await rolesModel.findByIdAndUpdate(
+        { _id: id, name: name, 'deleted_at.date': { $ne: null } },
+        {
+          $set: {
+            'deleted_at.date': null,
+            'deleted_at.user_id': null
+          }
+        },
+        { new: true }
+      );
 
-      if (!rollbackRolesAction) {
-        return {
-          code: STATUS_CODE.CODE_CONFLICT,
-          message: 'SORRY! THIS ROLES COULD NOT BE RESTORE!',
-          data: null
-        };
+      if (rollbackRolesAction) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'ROLES RESTORE SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_CONFLICT,
+          'SORRY! THIS ROLES COULD NOT BE RESTORE!',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'ROLES RESTORE SUCCESSFULLY',
-        data: rollbackRolesAction
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -411,51 +327,30 @@ class RolesModelAction {
     id,
     name
   }: IActionRoles['permanently_delete_roles']): Promise<any> {
-    const rolesCheckAction = await checkRecordFound({ _id: id, name: name });
-
-    if (rolesCheckAction === true || rolesCheckAction?.code !== 409) {
-      return {
-        code: STATUS_CODE.CODE_NOT_FOUND,
-        message: 'SORRY! THIS ROLES IS NOT FOUND!',
-        data: null
-      };
-    }
-
     try {
-      const rollbackRolesAction = await rolesModel
-        .findOneAndDelete({
-          _id: id,
-          name: name,
-          'deleted_at.date': { $ne: null }
-        })
-        .populate({
-          path: 'access_control.permission_id',
-          model: MODEL_COLLECTION_LIST.PERMISSION
-        })
-        .populate({
-          path: 'access_control.feature_id',
-          model: MODEL_COLLECTION_LIST.FEATURES
-        });
+      const rolesCheckAction = await checkRecordFound({ _id: id, name: name });
+
+      // if (rolesCheckAction === true || rolesCheckAction?.code !== 409) {
+      //   return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'SORRY! THIS ROLES IS NOT FOUND!', null);
+      // }
+
+      const rollbackRolesAction = await rolesModel.findOneAndDelete({
+        _id: id,
+        name: name
+        // 'deleted_at.date': { $ne: null }
+      });
 
       if (rollbackRolesAction) {
-        return {
-          code: STATUS_CODE.CODE_OK,
-          message: 'ROLE PERMANENTLY DELETED SUCCESSFULLY',
-          data: rollbackRolesAction
-        };
+        return ServerResponse(STATUS_CODE.CODE_OK, 'ROLE PERMANENTLY DELETED SUCCESSFULLY', true);
       } else {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'SORRY! THIS ROLE HAS BEEN NOT DELETED!',
-          data: null
-        };
+        return ServerError(
+          STATUS_CODE.CODE_NOT_FOUND,
+          'SORRY! THIS ROLE HAS BEEN NOT DELETED!',
+          null
+        );
       }
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 }

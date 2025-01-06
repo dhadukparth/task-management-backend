@@ -43,20 +43,19 @@ const permissionInputTypes = gql`
 
 const permissionQueries = gql`
   extend type Query {
-    permissions: arrayPermissionsResponseType
+    permissions(status: Int!): arrayPermissionsResponseType
     permission(id: ID!): singlePermissionResponseType
-    rollBackPermission: arrayPermissionsResponseType
   }
 `;
 
 const permissionMutations = gql`
   extend type Mutation {
-    createPermission(permissionData: permissionInput): singlePermissionResponseType
-    updatePermission(id: ID!, permissionData: permissionInput): singlePermissionResponseType
-    updateStatusPermission(id: ID!, status: Boolean): singlePermissionResponseType
-    tempDeletePermission(id: ID!): singlePermissionResponseType
-    rollBackPermission(id: ID!, name: String): singlePermissionResponseType
-    rollBackDeletePermission(id: ID!, name: String): singlePermissionResponseType
+    createPermission(permissionData: permissionInput): apiBooleanResponseType
+    updatePermission(id: ID!, permissionData: permissionInput): apiBooleanResponseType
+    updateStatusPermission(id: ID!, status: Boolean): apiBooleanResponseType
+    tempDeletePermission(id: ID!): apiBooleanResponseType
+    rollBackPermission(id: ID!, name: String): apiBooleanResponseType
+    rollBackDeletePermission(id: ID!, name: String): apiBooleanResponseType
   }
 `;
 

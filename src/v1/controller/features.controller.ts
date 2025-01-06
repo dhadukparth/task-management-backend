@@ -6,6 +6,35 @@ import { ServerError, ServerResponse } from '../utils/response';
 class FeaturesController {
   /**
    *
+   * REVIEW: The fetchAllFeature function retrieves a list of all features that have not been deleted.
+   *
+   */
+  async fetchAllFeatures(_parent: any, { status }: { status: number }) {
+    const actionResponse = await FeatureModelAction.fetchAllFeaturesAction({
+      status
+    });
+    return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+  }
+
+  /**
+   *
+   * REVIEW: The fetchSingleFeature function retrieves a single feature by its ID.
+   *
+   * @param _parent: The `_parent` parameter is typically unused in most resolvers.
+   * @param id: The ID of the feature you want to fetch.
+   *
+   */
+  async fetchSingleFeature(_parent: any, { id }: IActionFeature['single_feature']) {
+    const actionResponse = await FeatureModelAction.fetchSingleFeatureAction({ id });
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
+    }
+  }
+
+  /**
+   *
    * REVIEW: The createFeatures function is used to create a new feature.
    *
    * @param _parent: The `_parent` parameter is typically unused in most resolvers
@@ -23,10 +52,10 @@ class FeaturesController {
 
     const actionResponse = await FeatureModelAction.createFeatureAction(newFeature);
 
-    if (actionResponse?.code !== STATUS_CODE.CODE_CREATED) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_CREATED) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
     } else {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
   }
 
@@ -48,30 +77,11 @@ class FeaturesController {
       description: featureData.description
     };
     const actionResponse = await FeatureModelAction.updateFeaturesAction(updateFeatureData);
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The fetchAllFeature function retrieves a list of all features that have not been deleted.
-   *
-   */
-  async fetchAllFeatures() {
-    const actionResponse = await FeatureModelAction.fetchAllFeaturesAction();
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The fetchSingleFeature function retrieves a single feature by its ID.
-   *
-   * @param _parent: The `_parent` parameter is typically unused in most resolvers.
-   * @param id: The ID of the feature you want to fetch.
-   *
-   */
-  async fetchSingleFeature(_parent: any, { id }: IActionFeature['single_feature']) {
-    const actionResponse = await FeatureModelAction.fetchSingleFeatureAction({ id });
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
+    }
   }
 
   /**
@@ -91,11 +101,11 @@ class FeaturesController {
   ) {
     const actionResponse = await FeatureModelAction.permanentlyDeleteFeatureAction({ id, name });
 
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
+    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
+      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    } else {
+      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
     }
-
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
   }
 }
 

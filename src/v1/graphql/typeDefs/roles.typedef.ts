@@ -7,8 +7,8 @@ const rolesTypes = gql`
   }
 
   type accessControlType {
-    feature_id: featureResponse
-    permission_id: [permissionResponse]
+    features: featureResponse
+    permissions: [permissionResponse]
   }
 
   type rolesResponse {
@@ -59,21 +59,19 @@ const rolesInputs = gql`
 
 const rolesQueries = gql`
   extend type Query {
-    allRoles: arrayRolesResponseType
+    allRoles(status: Int!): arrayRolesResponseType
     singleRoles(id: String, name: String): singleRoleResponseType
-    deleteAllRoles: arrayRolesResponseType
-    rolesAccessControl: arrayRolesAccessControlType
   }
 `;
 
 const rolesMutations = gql`
   extend type Mutation {
-    createRoles(rolesData: rolesInput): singleRoleResponseType
-    updateRoles(id: ID!, rolesData: rolesInput): singleRoleResponseType
-    updateStatusRole(id: ID!, status: Boolean): singleRoleResponseType
-    tempDeleteRoles(id: ID!): singleRoleResponseType
-    restoreRoles(id: ID!, name: String): singleRoleResponseType
-    permanentlyDeleteRoles(id: ID!, name: String): singleRoleResponseType
+    createRoles(rolesData: rolesInput): apiBooleanResponseType
+    updateRoles(id: ID!, rolesData: rolesInput): apiBooleanResponseType
+    updateStatusRole(id: ID!, status: Boolean): apiBooleanResponseType
+    tempDeleteRoles(id: ID!): apiBooleanResponseType
+    restoreRoles(id: ID!, name: String): apiBooleanResponseType
+    permanentlyDeleteRoles(id: ID!, name: String): apiBooleanResponseType
   }
 `;
 

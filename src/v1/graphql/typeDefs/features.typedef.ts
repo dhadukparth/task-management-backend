@@ -32,16 +32,16 @@ const featureInputTypes = gql`
 
 const featureQueries = gql`
   extend type Query {
-    featuresList: arrayFeaturesResponseType
+    featuresList(status: Int!): arrayFeaturesResponseType
     singleFeature(id: ID!): singleFeatureResponseType
   }
 `;
 
 const featureMutations = gql`
   extend type Mutation {
-    createFeature(featureData: featureInput): singleFeatureResponseType
-    updateFeature(id: ID!, featureData: featureInput): singleFeatureResponseType
-    permanentlyDeleteFeature(id: ID!, name: String): singleFeatureResponseType
+    createFeature(featureData: featureInput): apiBooleanResponseType
+    updateFeature(id: ID!, featureData: featureInput): apiBooleanResponseType
+    deletePermanentlyFeature(id: ID!, name: String): apiBooleanResponseType
   }
 `;
 

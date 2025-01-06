@@ -20,14 +20,12 @@ const rolesSchema = new Schema<IRolesModel>({
         type: Schema.Types.ObjectId,
         ref: MODEL_COLLECTION_LIST.FEATURES,
         required: true,
-        unique: true
       },
       permission_id: [
         {
           type: Schema.Types.ObjectId,
           ref: MODEL_COLLECTION_LIST.PERMISSION,
           required: true,
-          unique: true
         }
       ]
     }

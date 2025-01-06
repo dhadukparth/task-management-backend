@@ -1,5 +1,6 @@
 export * as teamPipelines from './team-pipelines';
 export * as userPipelines from './user-pipelines';
+export * as rolePipelines from './role-pipelines'
 
 export const pipeline_created_at = {
   created_at: {

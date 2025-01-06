@@ -8,6 +8,6 @@ export default {
   Mutation: {
     createFeature: featuresController.createFeature,
     updateFeature: featuresController.updateFeature,
-    permanentlyDeleteFeature: featuresController.permanentlyDeleteFeature
+    deletePermanentlyFeature: featuresController.permanentlyDeleteFeature
   }
 };

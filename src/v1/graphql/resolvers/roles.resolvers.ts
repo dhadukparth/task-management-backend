@@ -4,8 +4,6 @@ export default {
   Query: {
     allRoles: rolesController.fetchAllRoles,
     singleRoles: rolesController.fetchSingleRoles,
-    deleteAllRoles: rolesController.deleteAllRoles,
-    rolesAccessControl: rolesController.fetchRoleAccessController
   },
   Mutation: {
     createRoles: rolesController.createRoles,

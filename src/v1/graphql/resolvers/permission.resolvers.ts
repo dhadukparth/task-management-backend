@@ -4,7 +4,6 @@ export default {
   Query: {
     permissions: permissionController.fetchAllPermission,
     permission: permissionController.fetchSinglePermission,
-    rollBackPermission: permissionController.rollBackAllPermission
   },
   Mutation: {
     createPermission: permissionController.createPermission,
