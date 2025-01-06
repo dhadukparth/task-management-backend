@@ -1,5 +1,7 @@
+import mongoose from 'mongoose';
 import STATUS_CODE from '../../../helper/statusCode';
 import { IActionDepartment } from '../../types/model/model-action';
+import { ServerError, ServerResponse } from '../../utils/response';
 import { departmentModel } from './department';
 
 const checkRecordFound = async (checkData: any): Promise<any> => {
@@ -7,11 +9,7 @@ const checkRecordFound = async (checkData: any): Promise<any> => {
     const checkRecordResult = await departmentModel.findOne(checkData);
 
     if (checkRecordResult === null) {
-      return {
-        code: STATUS_CODE.CODE_NOT_FOUND,
-        message: 'DEPARTMENT NOT FOUND',
-        data: null
-      };
+      return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This Department Not Found!', null);
     }
 
     return true;
@@ -25,6 +23,79 @@ const checkRecordFound = async (checkData: any): Promise<any> => {
 };
 
 class DepartmentModelAction {
+  async fetchAllDepartmentAction(): Promise<any> {
+    try {
+      const departmentList = await departmentModel.aggregate([
+        {
+          $addFields: {
+            created_at: {
+              $dateToString: {
+                format: '%Y-%m-%d %H:%M:%S',
+                date: { $toDate: '$created_at' }
+              }
+            }
+          }
+        },
+        {
+          $sort: {
+            created_at: -1
+          }
+        }
+      ]);
+
+      if (departmentList?.length > 0) {
+        return ServerResponse(
+          STATUS_CODE.CODE_OK,
+          'DEPARTMENTS FETCHED SUCCESSFULLY',
+          departmentList
+        );
+      } else {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'DEPARTMENT LIST NOT FOUND', null);
+      }
+    } catch (error: any) {
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
+    }
+  }
+
+  async fetchSingleDepartmentAction({ id }: IActionDepartment['single_department']): Promise<any> {
+    try {
+      const singleDepartmentList = await departmentModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(id)
+          }
+        },
+        {
+          $addFields: {
+            created_at: {
+              $dateToString: {
+                format: '%Y-%m-%d %H:%M:%S',
+                date: { $toDate: '$created_at' }
+              }
+            }
+          }
+        },
+        {
+          $sort: {
+            created_at: -1
+          }
+        }
+      ]);
+
+      if (singleDepartmentList?.length) {
+        return ServerResponse(
+          STATUS_CODE.CODE_OK,
+          'DEPARTMENT FETCH SUCCESSFULLY',
+          singleDepartmentList[0]
+        );
+      } else {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'DEPARTMENT LIST NOT FOUND', null);
+      }
+    } catch (error: any) {
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
+    }
+  }
+
   async createDepartmentAction({
     name,
     description
@@ -36,71 +107,17 @@ class DepartmentModelAction {
       });
 
       const savedDepartment = await newDepartment.save();
-      return {
-        code: STATUS_CODE.CODE_CREATED,
-        message: 'DEPARTMENT CREATED SUCCESSFULLY',
-        data: savedDepartment
-      };
-    } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
-    }
-  }
-
-  async fetchAllDepartmentAction(): Promise<any> {
-    try {
-      const departmentList = await departmentModel.find();
-
-      if (!departmentList || departmentList?.length === 0) {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'DEPARTMENT LIST NOT FOUND',
-          data: null
-        };
+      if (savedDepartment) {
+        return ServerResponse(STATUS_CODE.CODE_CREATED, 'DEPARTMENT CREATED SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+          'Sorry! This department has not created, Please try again later',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'DEPARTMENT FETCH SUCCESSFULLY',
-        data: departmentList
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
-    }
-  }
-
-  async fetchSingleDepartmentAction({ id }: IActionDepartment['single_department']): Promise<any> {
-    try {
-      const singleDepartment = await departmentModel.findOne({
-        _id: id
-      });
-
-      if (!singleDepartment) {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'DEPARTMENT NOT FOUND OR ALREADY DELETED',
-          data: null
-        };
-      }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'DEPARTMENT FETCHED SUCCESSFULLY',
-        data: singleDepartment
-      };
-    } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
-        message: error?.errorResponse?.errmsg || 'AN ERROR OCCURRED',
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -122,25 +139,17 @@ class DepartmentModelAction {
         { new: true }
       );
 
-      if (!updatedDepartment) {
-        return {
-          code: STATUS_CODE.CODE_NOT_MODIFIED,
-          message: 'DEPARTMENT NOT FOUND OR UPDATE FAILED',
-          data: null
-        };
+      if (updatedDepartment) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'DEPARTMENT UPDATED SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_MODIFIED,
+          'DEPARTMENT NOT FOUND OR UPDATE FAILED',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'DEPARTMENT UPDATED SUCCESSFULLY',
-        data: updatedDepartment
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -165,25 +174,17 @@ class DepartmentModelAction {
         { new: true }
       );
 
-      if (!updatedStatusDepartment) {
-        return {
-          code: STATUS_CODE.CODE_NOT_MODIFIED,
-          message: 'SORRY! THIS DEPARTMENT STATUS IS BEEN NOT UPDATED.',
-          data: null
-        };
+      if (updatedStatusDepartment) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'DEPARTMENT STATUS UPDATED SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_MODIFIED,
+          'SORRY! THIS DEPARTMENT STATUS IS BEEN NOT UPDATED.',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'DEPARTMENT STATUS UPDATED SUCCESSFULLY',
-        data: updatedStatusDepartment
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -194,11 +195,7 @@ class DepartmentModelAction {
     const departmentCheck = await checkRecordFound({ _id: id, name: name });
 
     if (departmentCheck === false) {
-      return {
-        code: STATUS_CODE.CODE_NOT_FOUND,
-        message: 'SORRY! THIS DEPARTMENT IS NOT FOUND!',
-        data: null
-      };
+      return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'SORRY! THIS DEPARTMENT IS NOT FOUND!', null);
     }
 
     try {
@@ -208,24 +205,20 @@ class DepartmentModelAction {
       });
 
       if (deleteDepartmentAction) {
-        return {
-          code: STATUS_CODE.CODE_OK,
-          message: 'DEPARTMENT PERMANENTLY DELETED SUCCESSFULLY',
-          data: deleteDepartmentAction
-        };
+        return ServerResponse(
+          STATUS_CODE.CODE_OK,
+          'DEPARTMENT PERMANENTLY DELETED SUCCESSFULLY',
+          true
+        );
       } else {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'SORRY! THIS DEPARTMENT HAS BEEN NOT DELETED!',
-          data: null
-        };
+        return ServerError(
+          STATUS_CODE.CODE_NOT_FOUND,
+          'SORRY! THIS DEPARTMENT HAS BEEN NOT DELETED!',
+          null
+        );
       }
     } catch (error: any) {
-      return {
-        code: STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
-        message: 'ERROR WHILE ROLLING BACK DEPARTMENT',
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 }

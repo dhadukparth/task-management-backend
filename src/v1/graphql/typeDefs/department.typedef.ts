@@ -40,10 +40,10 @@ const departmentQueries = gql`
 
 const departmentMutations = gql`
   extend type Mutation {
-    createDepartment(departmentData: departmentInput): singleDepartmentResponseType
-    updateDepartment(id: ID!, departmentData: departmentInput): singleDepartmentResponseType
-    updateStatusDepartment(id: ID!, status: Boolean): singleDepartmentResponseType
-    deletePermanentlyDepartment(id: ID!, name: String): singleDepartmentResponseType
+    createDepartment(departmentData: departmentInput): apiBooleanResponseType
+    updateDepartment(id: ID!, departmentData: departmentInput): apiBooleanResponseType
+    updateStatusDepartment(id: ID!, status: Boolean): apiBooleanResponseType
+    deletePermanentlyDepartment(id: ID!, name: String): apiBooleanResponseType
   }
 `;
 

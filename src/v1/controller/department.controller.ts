@@ -6,6 +6,29 @@ import { ServerError, ServerResponse } from '../utils/response';
 class DepartmentController {
   /**
    *
+   * REVIEW: The fetchAllDepartment function retrieves a list of all departments that have not been deleted.
+   *
+   */
+  async fetchAllDepartment() {
+    const actionResponse = await DepartmentModelAction.fetchAllDepartmentAction();
+    return actionResponse;
+  }
+
+  /**
+   *
+   * REVIEW: The fetchSingleDepartment function retrieves a single department by its ID.
+   *
+   * @param _parent: The `_parent` parameter is typically unused in most resolvers.
+   * @param id: The ID of the department you want to fetch.
+   *
+   */
+  async fetchSingleDepartment(_parent: any, { id }: IActionDepartment['single_department']) {
+    const actionResponse = await DepartmentModelAction.fetchSingleDepartmentAction({ id });
+    return actionResponse;
+  }
+
+  /**
+   *
    * REVIEW: The createDepartment function is used to create a new department.
    *
    * @param _parent: The `_parent` parameter is typically unused in most resolvers
@@ -22,35 +45,7 @@ class DepartmentController {
     };
 
     const actionResponse = await DepartmentModelAction.createDepartmentAction(newDepartment);
-
-    if (actionResponse?.code !== STATUS_CODE.CODE_CREATED) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
-    } else {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    }
-  }
-
-  /**
-   *
-   * REVIEW: The fetchAllDepartment function retrieves a list of all departments that have not been deleted.
-   *
-   */
-  async fetchAllDepartment() {
-    const actionResponse = await DepartmentModelAction.fetchAllDepartmentAction();
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The fetchSingleDepartment function retrieves a single department by its ID.
-   *
-   * @param _parent: The `_parent` parameter is typically unused in most resolvers.
-   * @param id: The ID of the department you want to fetch.
-   *
-   */
-  async fetchSingleDepartment(_parent: any, { id }: IActionDepartment['single_department']) {
-    const actionResponse = await DepartmentModelAction.fetchSingleDepartmentAction({ id });
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+    return actionResponse;
   }
 
   /**
@@ -71,11 +66,7 @@ class DepartmentController {
       description: departmentData.description
     };
     const actionResponse = await DepartmentModelAction.updateDepartmentAction(updateDepartmentData);
-    if (actionResponse?.code === STATUS_CODE.CODE_OK) {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    } else {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    }
+    return actionResponse;
   }
 
   /**
@@ -100,11 +91,7 @@ class DepartmentController {
     const actionResponse =
       await DepartmentModelAction.updateStatusDepartmentAction(updateDepartmentData);
 
-    if (actionResponse?.code === STATUS_CODE.CODE_OK) {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    } else {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    }
+    return actionResponse;
   }
 
   /**
@@ -126,12 +113,7 @@ class DepartmentController {
       id,
       name
     });
-
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
-    }
-
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+    return actionResponse;
   }
 }
 
