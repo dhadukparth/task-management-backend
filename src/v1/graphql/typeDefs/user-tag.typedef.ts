@@ -40,10 +40,10 @@ const userTagQueries = gql`
 
 const userTagMutations = gql`
   extend type Mutation {
-    createUserTag(userTagData: userTagInput): singleUserTagResponseType
-    updateUserTag(id: ID!, userTagData: userTagInput): singleUserTagResponseType
-    updateStatusUserTag(id: ID!, status: Boolean): singleUserTagResponseType
-    deletePermanentlyUserTag(id: ID!, name: String): singleUserTagResponseType
+    createUserTag(userTagData: userTagInput): apiBooleanResponseType
+    updateUserTag(id: ID!, userTagData: userTagInput): apiBooleanResponseType
+    updateStatusUserTag(id: ID!, status: Boolean): apiBooleanResponseType
+    deletePermanentlyUserTag(id: ID!, name: String): apiBooleanResponseType
   }
 `;
 

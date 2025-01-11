@@ -1,5 +1,7 @@
+import mongoose from 'mongoose';
 import STATUS_CODE from '../../../helper/statusCode';
 import { IActionUserTag } from '../../types/model/model-action';
+import { ServerError, ServerResponse } from '../../utils/response';
 import { userTagsModel } from './user-tags';
 
 const checkRecordFound = async (checkData: any): Promise<any> => {
@@ -8,7 +10,7 @@ const checkRecordFound = async (checkData: any): Promise<any> => {
 
     if (checkRecordResult === null) {
       return {
-        code: STATUS_CODE.CODE_NOT_FOUND,
+        status: STATUS_CODE.CODE_NOT_FOUND,
         message: 'DEPARTMENT NOT FOUND',
         data: null
       };
@@ -17,7 +19,7 @@ const checkRecordFound = async (checkData: any): Promise<any> => {
     return true;
   } catch (error: any) {
     return {
-      code: error?.errorResponse?.code,
+      status: error?.errorResponse?.code,
       message: error?.errorResponse?.errmsg,
       error: error
     };
@@ -25,6 +27,65 @@ const checkRecordFound = async (checkData: any): Promise<any> => {
 };
 
 class UserTagsModelAction {
+  async fetchAllUseTagAction(): Promise<any> {
+    try {
+      const userTagsList = await userTagsModel.aggregate([
+        {
+          $addFields: {
+            created_at: {
+              $dateToString: {
+                format: '%Y-%m-%d %H:%M:%S',
+                date: { $toDate: '$created_at' } // Convert `created_at` timestamp to a formatted string
+              }
+            }
+          }
+        }
+      ]);
+
+      if (userTagsList) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'USER TAGS FETCH SUCCESSFULLY', userTagsList);
+      } else {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'USER TAGS LIST NOT FOUND', null);
+      }
+    } catch (error: any) {
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
+    }
+  }
+
+  async fetchSingleUserTagAction({ id }: IActionUserTag['single_user_tag']): Promise<any> {
+    try {
+      const singleUserTag = await userTagsModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(id)
+          }
+        },
+        {
+          $addFields: {
+            created_at: {
+              $dateToString: {
+                format: '%Y-%m-%d %H:%M:%S',
+                date: { $toDate: '$created_at' } // Convert `created_at` timestamp to a formatted string
+              }
+            }
+          }
+        }
+      ]);
+
+      if (singleUserTag) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'USER TAG FETCHED SUCCESSFULLY', singleUserTag);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_FOUND,
+          'USER TAG NOT FOUND OR ALREADY DELETED',
+          null
+        );
+      }
+    } catch (error: any) {
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
+    }
+  }
+
   async createUserTagAction({
     name,
     description
@@ -36,71 +97,18 @@ class UserTagsModelAction {
       });
 
       const savedNewRecord = await newRecord.save();
-      return {
-        code: STATUS_CODE.CODE_CREATED,
-        message: 'USER TAG CREATED SUCCESSFULLY',
-        data: savedNewRecord
-      };
-    } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
-    }
-  }
 
-  async fetchAllUseTagAction(): Promise<any> {
-    try {
-      const userTagsList = await userTagsModel.find();
-
-      if (!userTagsList || userTagsList?.length === 0) {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'USER TAGS LIST NOT FOUND',
-          data: null
-        };
+      if (savedNewRecord) {
+        return ServerResponse(STATUS_CODE.CODE_CREATED, 'USER TAG CREATED SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+          'Sorry! This user tag is not created. Please try again.',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'USER TAGS FETCH SUCCESSFULLY',
-        data: userTagsList
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
-    }
-  }
-
-  async fetchSingleUserTagAction({ id }: IActionUserTag['single_user_tag']): Promise<any> {
-    try {
-      const singleUserTag = await userTagsModel.findOne({
-        _id: id
-      });
-
-      if (!singleUserTag) {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'USER TAG NOT FOUND OR ALREADY DELETED',
-          data: null
-        };
-      }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'USER TAG FETCHED SUCCESSFULLY',
-        data: singleUserTag
-      };
-    } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
-        message: error?.errorResponse?.errmsg || 'AN ERROR OCCURRED',
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -122,25 +130,17 @@ class UserTagsModelAction {
         { new: true }
       );
 
-      if (!updatedUserTag) {
-        return {
-          code: STATUS_CODE.CODE_NOT_MODIFIED,
-          message: 'USER TAG NOT FOUND OR UPDATE FAILED',
-          data: null
-        };
+      if (updatedUserTag) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'USER TAG UPDATED SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_MODIFIED,
+          'USER TAG NOT FOUND OR UPDATE FAILED',
+          null
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'USER TAG UPDATED SUCCESSFULLY',
-        data: updatedUserTag
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -149,14 +149,14 @@ class UserTagsModelAction {
     status
   }: IActionUserTag['update_status_user_tag']): Promise<any> {
     try {
-      const checkRecordOnDatabse = await checkRecordFound({ _id: id });
+      const checkRecordOnDatabase = await checkRecordFound({ _id: id, is_active: !status });
 
-      if (typeof checkRecordOnDatabse !== 'boolean') {
-        return checkRecordOnDatabse;
+      if (typeof checkRecordOnDatabase !== 'boolean') {
+        return checkRecordOnDatabase;
       }
 
       const updatedStatusUserTag = await userTagsModel.findByIdAndUpdate(
-        { _id: id },
+        { _id: id, is_active: !status },
         {
           $set: {
             is_active: status
@@ -165,25 +165,17 @@ class UserTagsModelAction {
         { new: true }
       );
 
-      if (!updatedStatusUserTag) {
-        return {
-          code: STATUS_CODE.CODE_NOT_MODIFIED,
-          message: 'SORRY! THIS USER TAG STATUS IS BEEN NOT UPDATED.',
-          data: null
-        };
+      if (updatedStatusUserTag) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'USER TAG STATUS UPDATED SUCCESSFULLY', true);
+      } else {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_MODIFIED,
+          'SORRY! THIS USER TAG STATUS IS BEEN NOT UPDATED.',
+          false
+        );
       }
-
-      return {
-        code: STATUS_CODE.CODE_OK,
-        message: 'USER TAG STATUS UPDATED SUCCESSFULLY',
-        data: updatedStatusUserTag
-      };
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -194,11 +186,7 @@ class UserTagsModelAction {
     const checkRecordOnDatabase = await checkRecordFound({ _id: id, name: name });
 
     if (checkRecordOnDatabase === false) {
-      return {
-        code: STATUS_CODE.CODE_NOT_FOUND,
-        message: 'SORRY! THIS DEPARTMENT IS NOT FOUND!',
-        data: null
-      };
+      return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'SORRY! THIS DEPARTMENT IS NOT FOUND!', null);
     }
 
     try {
@@ -208,24 +196,20 @@ class UserTagsModelAction {
       });
 
       if (deleteActionResult) {
-        return {
-          code: STATUS_CODE.CODE_OK,
-          message: 'USER TAG PERMANENTLY DELETED SUCCESSFULLY',
-          data: deleteActionResult
-        };
+        return ServerResponse(
+          STATUS_CODE.CODE_OK,
+          'USER TAG PERMANENTLY DELETED SUCCESSFULLY',
+          true
+        );
       } else {
-        return {
-          code: STATUS_CODE.CODE_NOT_FOUND,
-          message: 'SORRY! THIS USER TAG HAS BEEN NOT DELETED!',
-          data: null
-        };
+        return ServerError(
+          STATUS_CODE.CODE_NOT_FOUND,
+          'SORRY! THIS USER TAG HAS BEEN NOT DELETED!',
+          null
+        );
       }
     } catch (error: any) {
-      return {
-        code: STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
-        message: 'ERROR: UNABLE TO DELETE USER TAG. PLEASE TRY AGAIN.',
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 }

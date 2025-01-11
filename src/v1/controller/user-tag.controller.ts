@@ -6,6 +6,29 @@ import { ServerError, ServerResponse } from '../utils/response';
 class UserTagController {
   /**
    *
+   * REVIEW: The fetchAllUserTags function retrieves a list of all user tags that have not been deleted.
+   *
+   */
+  async fetchAllUserTags() {
+    const actionResponse = await UserTagModelAction.fetchAllUseTagAction();
+    return actionResponse;
+  }
+
+  /**
+   *
+   * REVIEW: The fetchSingleUserTag function retrieves a single user tag by its ID.
+   *
+   * @param _parent: The `_parent` parameter is typically unused in most resolvers.
+   * @param id: The ID of the user tag you want to fetch.
+   *
+   */
+  async fetchSingleUserTag(_parent: any, { id }: IActionUserTag['single_user_tag']) {
+    const actionResponse = await UserTagModelAction.fetchSingleUserTagAction({ id });
+    return actionResponse;
+  }
+
+  /**
+   *
    * REVIEW: The createUserTag function is used to create a new user tag.
    *
    * @param _parent: The `_parent` parameter is typically unused in most resolvers
@@ -23,34 +46,7 @@ class UserTagController {
 
     const actionResponse = await UserTagModelAction.createUserTagAction(newRecordData);
 
-    if (actionResponse?.code !== STATUS_CODE.CODE_CREATED) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
-    } else {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    }
-  }
-
-  /**
-   *
-   * REVIEW: The fetchAllUserTags function retrieves a list of all user tags that have not been deleted.
-   *
-   */
-  async fetchAllUserTags() {
-    const actionResponse = await UserTagModelAction.fetchAllUseTagAction();
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-  }
-
-  /**
-   *
-   * REVIEW: The fetchSingleUserTag function retrieves a single user tag by its ID.
-   *
-   * @param _parent: The `_parent` parameter is typically unused in most resolvers.
-   * @param id: The ID of the user tag you want to fetch.
-   *
-   */
-  async fetchSingleUserTag(_parent: any, { id }: IActionUserTag['single_user_tag']) {
-    const actionResponse = await UserTagModelAction.fetchSingleUserTagAction({ id });
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+    return actionResponse;
   }
 
   /**
@@ -71,11 +67,7 @@ class UserTagController {
       description: userTagData.description
     };
     const actionResponse = await UserTagModelAction.updateUserTagAction(updateRecordData);
-    if (actionResponse?.code === STATUS_CODE.CODE_OK) {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    } else {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    }
+    return actionResponse;
   }
 
   /**
@@ -99,11 +91,7 @@ class UserTagController {
 
     const actionResponse =
       await UserTagModelAction.updateStatusUserTagAction(updateStatusRecordData);
-    if (actionResponse?.code === STATUS_CODE.CODE_OK) {
-      return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    } else {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.data);
-    }
+    return actionResponse;
   }
 
   /**
@@ -126,11 +114,7 @@ class UserTagController {
       name
     });
 
-    if (actionResponse?.code !== 200 || actionResponse?.code !== 409) {
-      return ServerError(actionResponse?.code, actionResponse?.message, actionResponse?.error);
-    }
-
-    return ServerResponse(actionResponse?.code, actionResponse?.message, actionResponse?.data);
+    return actionResponse;
   }
 }
 
