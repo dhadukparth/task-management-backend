@@ -1,17 +1,15 @@
 import gql from 'graphql-tag';
 
 const authTypes = gql`
+  type loginTokenObject {
+    accessToken: String
+    refreshToken: String
+  }
+
   type singleLoginResponse {
     status: Int
     message: String
     data: loginTokenObject
-    error: String
-  }
-
-  type singleUserBooleanResponseType {
-    status: Int
-    message: String
-    data: Boolean
     error: String
   }
 `;
@@ -38,13 +36,13 @@ const authUserInputTypes = gql`
 const authUserMutations = gql`
   extend type Mutation {
     userLogin(userData: userLoginInput): singleLoginResponse
-    changeUserPassword(userData: changeUserPasswordInput): singleUserBooleanResponseType
+    changeUserPassword(userData: changeUserPasswordInput): apiBooleanResponseType
 
-    sendVerifyEmail(email: String): singleUserBooleanResponseType
-    verifyEmailAddress(verify: String): singleUserBooleanResponseType
+    sendVerifyEmail(email: String): apiBooleanResponseType
+    verifyEmailAddress(verify: String): apiBooleanResponseType
 
-    sendResetVerifyKeyUserPassword(email: String): singleUserBooleanResponseType
-    resetUserPassword(userData: resetUserPasswordInput): singleUserBooleanResponseType
+    sendFPEmail(email: String): apiBooleanResponseType
+    resetFPVerify(userData: resetUserPasswordInput): apiBooleanResponseType
   }
 `;
 

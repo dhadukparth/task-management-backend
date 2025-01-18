@@ -1,6 +1,6 @@
 export * as teamPipelines from './team-pipelines';
 export * as userPipelines from './user-pipelines';
-export * as rolePipelines from './role-pipelines'
+export * as rolePipelines from './role-pipelines';
 
 export const pipeline_created_at = {
   created_at: {
@@ -22,4 +22,12 @@ export const pipeline_birth_date = {
       }
     }
   }
+};
+
+export const pipeline_active_status = {
+  $cond: [
+    { $eq: ['$is_active', true] },
+    { label: 'Active', value: true },
+    { label: 'InActive', value: false }
+  ]
 };

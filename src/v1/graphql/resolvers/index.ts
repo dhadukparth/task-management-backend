@@ -1,3 +1,4 @@
+import authResolvers from './auth.resolvers';
 import departmentResolvers from './department.resolvers';
 import featureResolvers from './features.resolvers';
 import mediaResolvers from './media.resolvers';
@@ -35,6 +36,7 @@ export default {
     ...teamResolvers.Mutation,
     ...taskCategoryResolvers.Mutation,
     ...taskGroupResolvers.Mutation,
-    ...projectResolvers.Mutation
+    ...projectResolvers.Mutation,
+    ...authResolvers.Mutation
   }
 };

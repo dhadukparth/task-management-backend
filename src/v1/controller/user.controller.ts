@@ -9,11 +9,7 @@ class UserController {
   async getAllUsers() {
     const apiResponse: any = await userAction.fetchAllUsersAction();
 
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(STATUS_CODE.CODE_OK, 'Users fetched successfully.', apiResponse?.data);
-    } else {
-      return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
-    }
+    return apiResponse;
   }
 
   async getSingleUsers(_parent: any, { userId }: { userId: string }) {
@@ -21,11 +17,7 @@ class UserController {
       userId
     });
 
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(STATUS_CODE.CODE_OK, 'Users fetched successfully.', apiResponse?.data);
-    } else {
-      return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
-    }
+    return apiResponse;
   }
 
   /**
@@ -99,11 +91,7 @@ class UserController {
 
     const apiResponse: any = await userAction.updateUserAction(payload);
 
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(apiResponse?.status, apiResponse?.message, apiResponse?.data);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 
   /**
@@ -113,18 +101,12 @@ class UserController {
    * @param email - The email address of the user to deactivate.
    *
    */
-  async deActiveUser(_parent: any, { email }: { email: string }) {
+  async updateUserStatus(_parent: any, { email }: { email: string }) {
     const payload = {
       email: email
     };
-
     const apiResponse: any = await userAction.activeUserStatusAction(payload);
-
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(apiResponse?.status, apiResponse?.message, apiResponse?.data);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 
   /**
@@ -140,11 +122,7 @@ class UserController {
       password: userData.password
     });
 
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(STATUS_CODE.CODE_OK, apiResponse?.message, apiResponse?.data);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 
   async recoverDeleteUser(
@@ -157,11 +135,7 @@ class UserController {
     };
 
     const apiResponse: any = await userAction.recoverDeleteUserAction(payload);
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(STATUS_CODE.CODE_OK, apiResponse?.message, apiResponse?.data);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 }
 

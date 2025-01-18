@@ -8,7 +8,7 @@ export default {
   Mutation: {
     createUser: userController.createUser,
     updateUser: userController.updateUser,
-    activeUserStatus: userController.deActiveUser,
+    activeUserStatus: userController.updateUserStatus,
 
     tempDeleteUser: userController.tempDeleteUser,
     recoverDeleteUser: userController.recoverDeleteUser

@@ -1,7 +1,6 @@
 import STATUS_CODE from '../../helper/statusCode';
 import userAction from '../model/users/user-action';
 import { ServerError, ServerResponse } from '../utils/response';
-import { AppTokens } from '../utils/tokens';
 
 class AuthController {
   /**
@@ -11,13 +10,14 @@ class AuthController {
    * @param {{ userData: any }} args - Contains user email and password for login.
    *
    */
-  async userLogin(_parent: any, { userData }: { userData: any }) {
+  async userLogin(_parent: any, { userData }: { userData: any }, { response }: any) {
     const payload = {
       email: userData.email,
       password: userData.password
     };
+    console.log(response);
 
-    const apiResponse: any = await userAction.userLoginAction(payload);
+    const apiResponse: any = await userAction.userLoginAction(payload, { response });
 
     if (apiResponse?.status === STATUS_CODE.CODE_OK) {
       return ServerResponse(apiResponse?.status, apiResponse?.message, apiResponse?.data);
@@ -36,11 +36,7 @@ class AuthController {
   async sendForgotEmailPassword(_parent: any, { email }: { email: string }) {
     const apiResponse: any = await userAction.sendForgotPasswordAction({ email: email });
 
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(apiResponse?.status, apiResponse?.message, apiResponse?.data);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 
   /**
@@ -57,19 +53,9 @@ class AuthController {
       newPassword: userData.newPassword
     };
 
-    const decodeVerifyKey: any = await AppTokens.verifyToken(payload.verify);
-
-    if (decodeVerifyKey.status !== STATUS_CODE.CODE_OK) {
-      return ServerError(decodeVerifyKey.status, decodeVerifyKey.message, decodeVerifyKey.error);
-    }
-
     const apiResponse: any = await userAction.resetUserPasswordAction(payload);
 
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(apiResponse?.status, apiResponse?.message, true);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 
   /**
@@ -88,11 +74,7 @@ class AuthController {
 
     const apiResponse: any = await userAction.changeUserPasswordAction(payload);
 
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(apiResponse?.status, apiResponse?.message, null);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 
   /**
@@ -106,17 +88,8 @@ class AuthController {
     const payload = {
       email: email
     };
-
     const apiResponse: any = await userAction.sendVerifyEmailAction(payload);
-
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(
-        STATUS_CODE.CODE_OK,
-        'Verification email sent successfully.',
-        apiResponse?.data
-      );
-    }
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 
   /**
@@ -127,24 +100,11 @@ class AuthController {
    *
    */
   async verifyEmailAddress(_parent: any, { verify }: { verify: string }) {
-    const decodeVerifyKey: any = await AppTokens.verifyToken(verify);
+    const apiResponse: any = await userAction.verifyEmailAddressAction({
+      verifyKey: verify
+    });
 
-    if (decodeVerifyKey.status !== STATUS_CODE.CODE_OK) {
-      return ServerError(decodeVerifyKey.status, decodeVerifyKey.message, decodeVerifyKey.error);
-    }
-
-    const payload = {
-      email: decodeVerifyKey?.decoded?.email,
-      verifyKey: decodeVerifyKey?.decoded?.verify
-    };
-
-    const apiResponse: any = await userAction.verifyEmailAddressAction(payload);
-
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(STATUS_CODE.CODE_OK, apiResponse?.message, apiResponse?.data);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 }
 

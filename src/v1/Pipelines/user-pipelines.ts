@@ -86,12 +86,12 @@ export const user_pipelines = [
               }
             }
           },
-          in: { 
+          in: {
             $cond: {
               if: { $gt: [{ $size: '$$activeTags' }, 0] }, // Check if there are any active roles
               then: { $arrayElemAt: ['$$activeTags', 0] }, // Return the first active role
               else: null // Return false if no active roles are found
-            } 
+            }
           }
         }
       }
@@ -116,6 +116,13 @@ export const user_pipelines = [
             }
           }
         }
+      },
+      is_active: {
+        $cond: [
+          { $eq: ['$is_active', true] },
+          { label: 'Active', value: true },
+          { label: 'InActive', value: false }
+        ]
       }
     }
   }

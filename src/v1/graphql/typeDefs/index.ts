@@ -28,6 +28,11 @@ export default gql`
     error: String
   }
 
+  type apiIsActiveType {
+    label: String
+    value: Boolean
+  }
+
   ${permissionTypeDefs}
   ${featureTypeDefs}
   ${rolesTypeDefs}

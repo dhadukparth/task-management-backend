@@ -3,10 +3,8 @@ import { bcryptFn } from '../../../helper/bcrypt';
 import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
 import { generateUniqueKey } from '../../../helper/uuid';
-import { APP_TIMERS } from '../../constant';
 import { userPipelines } from '../../Pipelines';
 import { ServerError, ServerResponse } from '../../utils/response';
-import { AppTokens } from '../../utils/tokens';
 import { userModel } from './user';
 import UserCredentialsAction from './user-credentials';
 
@@ -69,13 +67,15 @@ class UserModelAction extends UserCredentialsAction {
         }
       ]);
 
-      return ServerResponse(STATUS_CODE.CODE_OK, 'All users fetched successfully', getAllUsers);
+      console.log(JSON.stringify(getAllUsers));
+
+      if (getAllUsers.length) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'All users fetched successfully', getAllUsers);
+      } else {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'No users found', null);
+      }
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -105,11 +105,7 @@ class UserModelAction extends UserCredentialsAction {
         return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'Sorry, this user does not exist', null);
       }
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }
 
@@ -121,7 +117,11 @@ class UserModelAction extends UserCredentialsAction {
 
       const checkUserDetails = await userModel.findOne(checkUser);
       if (checkUserDetails) {
-        return ServerError(STATUS_CODE.CODE_CONFLICT, 'Sorry, this user is already existing', null);
+        return ServerError(
+          STATUS_CODE.CODE_CONFLICT,
+          'Sorry, this email address is already existing',
+          null
+        );
       }
 
       const hashedPassword = await bcryptFn.hashPassword(args.password);
@@ -189,21 +189,48 @@ class UserModelAction extends UserCredentialsAction {
 
   async updateUserAction(args: { id: string } & UpdateUserType) {
     try {
-      const checkUser = {
+      // TODO: check the user id and email address and not deleted
+      const checkUserIdWithEmail = await userModel.findOne({
         _id: args.id,
         'email.email_address': args.email,
-        'email.verify': true,
-        is_active: true,
         deleted_at: null
-      };
-
-      const checkUserDetails = await userModel.findOne(checkUser);
-      if (!checkUserDetails) {
+      });
+      if (!checkUserIdWithEmail) {
         return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'Sorry, this user does not exist', null);
       }
 
+      // TODO: check the user email address and verify or not
+      const checkUserWithEVerify = await userModel.findOne({
+        'email.verify': true
+      });
+      if (!checkUserWithEVerify) {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_FOUND,
+          'Sorry, this user email has been not verify.',
+          null
+        );
+      }
+
+      // TODO: check the user email address and verify or not
+      const checkUserIsActive = await userModel.findOne({
+        is_active: true
+      });
+      if (!checkUserIsActive) {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_FOUND,
+          'Sorry, this user is not active user active after change details.',
+          null
+        );
+      }
+
       const updateUser = await userModel.findOneAndUpdate(
-        checkUser,
+        {
+          _id: args.id,
+          'email.email_address': args.email,
+          'email.verify': true,
+          is_active: true,
+          deleted_at: null
+        },
         {
           $set: {
             'name.first_name': args.first_name,
@@ -236,98 +263,6 @@ class UserModelAction extends UserCredentialsAction {
         'User not found with the provided details.',
         null
       );
-    } catch (error: any) {
-      const message = error?.errorResponse?.errmsg || 'Internal Server Error';
-      return ServerError(STATUS_CODE.CODE_INTERNAL_SERVER_ERROR, message, error);
-    }
-  }
-
-  async sendVerifyEmailAction(args: { email: string }) {
-    try {
-      const checkUser = {
-        'email.email_address': args.email,
-        'email.verify': false,
-        is_active: true,
-        deleted_at: null
-      };
-
-      const checkUserDetails: any = await userModel.findOne(checkUser);
-      if (!checkUserDetails) {
-        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'Sorry, this user does not exist', null);
-      }
-
-      const verifyKey = generateUniqueKey(32, 4);
-
-      const updateVerifyKey = await userModel.findOneAndUpdate(
-        { 'email.email_address': args.email },
-        { $set: { 'email.verify_key': verifyKey } },
-        { new: true }
-      );
-
-      if (!updateVerifyKey) {
-        return ServerError(
-          STATUS_CODE.CODE_NOT_FOUND,
-          'User with the provided email not found.',
-          null
-        );
-      }
-
-      const verifyToken = await AppTokens.generateToken(
-        {
-          email: args.email,
-          verify: verifyKey
-        },
-        APP_TIMERS.SEND_VERIFY_EXPIRED
-      );
-
-      if (verifyToken) {
-        return ServerResponse(STATUS_CODE.CODE_OK, 'Verify email send successfully', true);
-      }
-
-      return ServerError(STATUS_CODE.CODE_INTERNAL_SERVER_ERROR, 'Internal Server Error', null);
-    } catch (error: any) {
-      const message = error?.errorResponse?.errmsg || 'Internal Server Error';
-      return ServerError(STATUS_CODE.CODE_INTERNAL_SERVER_ERROR, message, error);
-    }
-  }
-
-  async verifyEmailAddressAction(args: { verifyKey: string; email: string }) {
-    try {
-      const checkValues = {
-        'email.email_address': args.email,
-        'email.verify_key': args.verifyKey,
-        'email.verify': false,
-        is_active: true,
-        deleted_at: null
-      };
-
-      const checkEmailVerified = await userModel.findOne(checkValues);
-
-      if (!checkEmailVerified) {
-        return ServerError(
-          STATUS_CODE.CODE_CONFLICT,
-          'Sorry! This email address is already verified.',
-          null
-        );
-      }
-
-      const findEmailUser = await userModel.findOneAndUpdate(
-        checkValues,
-        {
-          $set: { 'email.verify': true }
-        },
-        { new: true }
-      );
-
-      if (!findEmailUser) {
-        return ServerError(
-          STATUS_CODE.CODE_NOT_FOUND,
-          'User with the provided email and verification key not found.',
-          null
-        );
-      }
-
-      return ServerResponse(STATUS_CODE.CODE_OK, 'Email successfully verified.', true);
     } catch (error: any) {
       const message = error?.errorResponse?.errmsg || 'Internal Server Error';
       return ServerError(STATUS_CODE.CODE_INTERNAL_SERVER_ERROR, message, error);

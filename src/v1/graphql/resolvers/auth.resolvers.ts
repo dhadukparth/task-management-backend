@@ -2,16 +2,18 @@ import { authController } from '../../controller';
 
 export default {
   Mutation: {
-    // forgot password
-    sendResetVerifyKeyUserPassword: authController.sendForgotEmailPassword,
-    resetUserPassword: authController.resetNewUserPassword,
+    // Login
+    userLogin: authController.userLogin,
 
+    // forgot password
+    sendFPEmail: authController.sendForgotEmailPassword,
+    resetFPVerify: authController.resetNewUserPassword,
+
+    // send and verify email address
     sendVerifyEmail: authController.sendVerifyEmail,
     verifyEmailAddress: authController.verifyEmailAddress,
 
-    changeUserPassword: authController.changeNewUserPassword,
-
-    // Login
-    userLogin: authController.userLogin
+    // change new password
+    changeUserPassword: authController.changeNewUserPassword
   }
 };

@@ -44,7 +44,8 @@ const userTypes = gql`
     name: userName
     email: userEmail
     contact: userContact
-    role: userRoleData
+    # role: userRoleData
+    role: rolesResponse
     tag: singleUserTagResponse
     department: departmentResponse
     gender: String
@@ -52,19 +53,7 @@ const userTypes = gql`
     blood_group: String
     place_details: placeDetails
     created_at: String
-    is_active: Boolean
-  }
-
-  type loginTokenObject {
-    accessToken: String
-    refreshToken: String
-  }
-
-  type singleLoginResponse {
-    status: Int
-    message: String
-    data: loginTokenObject
-    error: String
+    is_active: apiIsActiveType
   }
 
   type multipleUserResponseType {
@@ -78,13 +67,6 @@ const userTypes = gql`
     status: Int
     message: String
     data: singleUserResponse
-    error: String
-  }
-
-  type singleUserBooleanResponseType {
-    status: Int
-    message: String
-    data: Boolean
     error: String
   }
 `;
@@ -163,19 +145,11 @@ const userQueries = gql`
 
 const userMutations = gql`
   extend type Mutation {
-    createUser(userData: userCreateInput): singleUserBooleanResponseType
-    updateUser(userId: String!, userData: userUpdateInput): singleUserBooleanResponseType
-    activeUserStatus(email: String): singleUserBooleanResponseType
-    tempDeleteUser(userData: tempDeleteUserInput): singleUserBooleanResponseType
-    recoverDeleteUser(userData: userRecoverInput): singleUserBooleanResponseType
-
-    sendVerifyEmail(email: String): singleUserBooleanResponseType
-    verifyEmailAddress(verify: String): singleUserBooleanResponseType
-
-    sendResetVerifyKeyUserPassword(email: String): singleUserBooleanResponseType
-    resetUserPassword(userData: resetUserPasswordInput): singleUserBooleanResponseType
-
-    userLogin(userData: userLoginInput): singleLoginResponse
+    createUser(userData: userCreateInput): apiBooleanResponseType
+    updateUser(userId: String!, userData: userUpdateInput): apiBooleanResponseType
+    activeUserStatus(email: String): apiBooleanResponseType
+    tempDeleteUser(userData: tempDeleteUserInput): apiBooleanResponseType
+    recoverDeleteUser(userData: userRecoverInput): apiBooleanResponseType
   }
 `;
 

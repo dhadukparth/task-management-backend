@@ -9,9 +9,9 @@ export const MODEL_COLLECTION_LIST = {
   USER: 'tbl_users',
   USER_TAGS: 'tbl_user_tags',
   TEAM: 'tbl_teams',
-  TASK_CATEGORY: "tbl_task_categories",
-  TASK_GROUP: "tbl_task_groups",
-  PROJECT: "tbl_projects"
+  TASK_CATEGORY: 'tbl_task_categories',
+  TASK_GROUP: 'tbl_task_groups',
+  PROJECT: 'tbl_projects'
 };
 
 export const FILE_UPLOAD_PATH = {
@@ -24,5 +24,7 @@ export const FILE_UPLOAD_PATH = {
 };
 
 export const APP_TIMERS = {
-  SEND_VERIFY_EXPIRED: '10m'
+  FP_VERIFY_EXPIRED: '10m',
+  ACCESS_TOKEN_EXPIRED: '60m',
+  REFRESH_TOKEN_EXPIRED: '30d'
 };
