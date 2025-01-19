@@ -71,20 +71,7 @@ export const team_pipelines = [
       from: MODEL_COLLECTION_LIST.USER, // Collection for createdUser
       localField: 'createdUser',
       foreignField: '_id',
-      as: 'createdUser',
-      pipeline: [
-        {
-          $match: {
-            is_active: true // Include only active managers
-          }
-        },
-        ...user_pipelines,
-        {
-          $addFields: {
-            ...pipeline_created_at
-          }
-        }
-      ]
+      as: 'createdUser'
     }
   },
   {
@@ -102,12 +89,19 @@ export const team_pipelines = [
           },
           in: { $arrayElemAt: ['$$activeCreatedUser', 0] } // Get the first matching user or null
         }
+      },
+      created_at: {
+        $dateToString: {
+          format: '%Y-%m-%d %H:%M:%S',
+          date: { $toDate: '$created_at' } // Convert `created_at` timestamp to a formatted string
+        }
+      },
+      updated_at: {
+        $dateToString: {
+          format: '%Y-%m-%d %H:%M:%S',
+          date: { $toDate: '$updated_at' } // Convert `created_at` timestamp to a formatted string
+        }
       }
-    }
-  },
-  {
-    $addFields: {
-      ...pipeline_created_at
     }
   }
 ];

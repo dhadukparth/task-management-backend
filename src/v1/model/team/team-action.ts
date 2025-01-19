@@ -48,11 +48,12 @@ class TeamModelAction {
         }
       ]);
 
-      const result = teamData.length > 0 ? teamData?.[0] : null;
-
-      return ServerResponse(STATUS_CODE.CODE_OK, 'Team fetched successfully.', result);
+      if (teamData.length) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'Team fetched successfully.', teamData?.[0]);
+      } else {
+        return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This team is not found!.', null);
+      }
     } catch (error: any) {
-      console.log(error);
       return ServerError(
         error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
         error?.errorResponse?.errmsg || 'Failed to fetch project list.',
@@ -92,8 +93,7 @@ class TeamModelAction {
         employee: args.employee,
         manager: args.manager,
         technologies: args.technologies,
-        created_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC'),
-        updated_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC')
+        created_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC')
       });
 
       const newTeamResult = await newTeam.save();
@@ -108,13 +108,11 @@ class TeamModelAction {
         false
       );
     } catch (error: any) {
-      console.log(error);
-
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(
+        error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        error?.errorResponse?.errmsg || 'Failed to fetch project list.',
+        error
+      );
     }
   }
 
@@ -140,43 +138,37 @@ class TeamModelAction {
         return ServerResponse(STATUS_CODE.CODE_NOT_FOUND, 'Sorry! This team is not found.', false);
       }
 
-      const updateTeamResponse = await teamModel.aggregate([
+      const updateTeamResponse = await teamModel.findOneAndUpdate(
+        { _id: args.teamId },
         {
-          $match: checkTeam
-        },
-        {
-          $addFields: {
+          $set: {
             name: args.name,
             description: args.description,
-            createdUser: args.createdUser,
-            updated_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC')
+            updated_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC'),
+            leader: args.leader,
+            employee: args.employee,
+            manager: args.manager,
+            technologies: args.technologies
           }
         },
-        {
-          $addFields: {
-            leader: { $concatArrays: ['$leader', args.leader] },
-            employee: { $concatArrays: ['$employee', args.employee] },
-            manager: { $concatArrays: ['$manager', args.manager] },
-            technologies: { $concatArrays: ['$technologies', args.technologies] }
-          }
-        }
-      ]);
+        { new: true, upsert: false } // Return the updated document, do not create if it doesn't exist
+      );
 
       if (updateTeamResponse) {
-        return ServerResponse(STATUS_CODE.CODE_OK, `This team is updated successfully.`, true);
+        return ServerResponse(STATUS_CODE.CODE_OK, 'This team is updated successfully.', true);
       }
 
       return ServerResponse(
         STATUS_CODE.CODE_NOT_MODIFIED,
-        'Sorry! This team is not updated. please try again.',
+        'Sorry! This team is not updated. Please try again.',
         false
       );
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(
+        error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        error?.errorResponse?.errmsg || 'Failed to fetch project list.',
+        error
+      );
     }
   }
 
@@ -184,8 +176,7 @@ class TeamModelAction {
     try {
       const checkTeam = {
         _id: new mongoose.Types.ObjectId(args.teamId),
-        name: args.name,
-        is_active: true
+        name: args.name
       };
 
       const apiCheckTeam = await teamModel.findOne(checkTeam);
@@ -195,16 +186,17 @@ class TeamModelAction {
 
       const changeStatus = !apiCheckTeam?.is_active;
 
-      const getTeamResponse = await teamModel.aggregate([
-        {
-          $match: checkTeam
-        },
+      const getTeamResponse = await teamModel.findOneAndUpdate(
+        checkTeam,
         {
           $set: {
             is_active: changeStatus
           }
+        },
+        {
+          new: true
         }
-      ]);
+      );
 
       if (getTeamResponse) {
         return ServerResponse(
@@ -214,17 +206,18 @@ class TeamModelAction {
         );
       }
 
-      return ServerResponse(
+      return ServerError(
         STATUS_CODE.CODE_NOT_MODIFIED,
         'Sorry! This team status is not changed, please try again.',
         false
       );
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      console.log(error);
+      return ServerError(
+        error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        error?.errorResponse?.errmsg || 'Failed to fetch project list.',
+        error
+      );
     }
   }
 
@@ -268,11 +261,11 @@ class TeamModelAction {
         false
       );
     } catch (error: any) {
-      return {
-        code: error?.errorResponse?.code,
-        message: error?.errorResponse?.errmsg,
-        error: error
-      };
+      return ServerError(
+        error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        error?.errorResponse?.errmsg || 'Failed to fetch project list.',
+        error
+      );
     }
   }
 }

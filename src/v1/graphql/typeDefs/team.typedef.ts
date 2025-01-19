@@ -27,6 +27,7 @@ const teamTypes = gql`
     status: Int
     message: String
     data: [teamResponse]
+    error: String
   }
 `;
 
@@ -35,10 +36,10 @@ const teamInputs = gql`
     name: String!
     description: String!
     leader: [String]!
+    createdUser: String!
     employee: [String]
     manager: [String]
     technologies: [String]
-    createdUser: String
   }
 
   input teamStatusInput {
