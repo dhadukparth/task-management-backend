@@ -1,8 +1,6 @@
 import mongoose from 'mongoose';
-import STATUS_CODE from '../../helper/statusCode';
-import ProjectModelAction from '../model/project/project-action';
-import { ServerError, ServerResponse } from '../utils/response';
 import DateTimeUtils from '../../helper/moment';
+import ProjectModelAction from '../model/project/project-action';
 
 class ProjectController {
   async getAllProjects(_parent: any, { status }: { status: number }) {
@@ -11,7 +9,7 @@ class ProjectController {
     };
 
     const actionResponse = await ProjectModelAction.getAllProjectsAction(payload);
-    return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    return actionResponse;
   }
 
   async getSingleProjects(_parent: any, { projectId, name }: { projectId: string; name: string }) {
@@ -19,7 +17,7 @@ class ProjectController {
       id: projectId,
       name
     });
-    return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
+    return actionResponse;
   }
 
   async createProject(
@@ -50,11 +48,7 @@ class ProjectController {
         endDate: endToUtc
       }
     });
-    if (actionResponse?.status !== STATUS_CODE.CODE_CREATED) {
-      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
-    } else {
-      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
-    }
+    return actionResponse;
   }
 
   async updateProject(
@@ -88,24 +82,15 @@ class ProjectController {
         endDate: endToUtc
       }
     });
-    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
-    } else {
-      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
-    }
+    return actionResponse;
   }
 
-  async updateStatusProject(_parent: any, { id, status }: { id: string; status: boolean }) {
+  async updateStatusProject(_parent: any, { id }: { id: string }) {
     const actionResponse = await ProjectModelAction.updateStatusProjectAction({
-      projectId: id,
-      status
+      projectId: id
     });
 
-    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
-    } else {
-      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
-    }
+    return actionResponse;
   }
 
   async deleteTempProject(_parent: any, { id, name }: { id: string; name: string }) {
@@ -113,11 +98,15 @@ class ProjectController {
       projectId: id,
       name
     });
-    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
-    } else {
-      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
-    }
+    return actionResponse;
+  }
+
+  async recoverTempProject(_parent: any, { id, name }: { id: string; name: string }) {
+    const actionResponse = await ProjectModelAction.recoverTempProjectAction({
+      projectId: id,
+      name
+    });
+    return actionResponse;
   }
 
   async deletePermanentlyProject(_parent: any, { id, name }: { id: string; name: string }) {
@@ -125,11 +114,7 @@ class ProjectController {
       projectId: id,
       name
     });
-    if (actionResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);
-    } else {
-      return ServerError(actionResponse?.status, actionResponse?.message, actionResponse?.error);
-    }
+    return actionResponse;
   }
 }
 

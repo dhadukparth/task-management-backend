@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { projectModel } from '.';
 import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
-import { MODEL_COLLECTION_LIST } from '../../constant';
+import { project_pipelines } from '../../Pipelines/project-pipelines';
 import { ServerError, ServerResponse } from '../../utils/response';
 
 type ProjectType = {
@@ -44,72 +44,7 @@ class ProjectModelAction {
             }
           }
         },
-        {
-          $lookup: {
-            from: MODEL_COLLECTION_LIST.TEAM,
-            localField: 'teamId',
-            foreignField: '_id',
-            as: 'team'
-          }
-        },
-        {
-          $lookup: {
-            from: MODEL_COLLECTION_LIST.USER,
-            localField: 'ownerId',
-            foreignField: '_id',
-            as: 'owner'
-          }
-        },
-        {
-          $addFields: {
-            created_at: {
-              $dateToString: {
-                format: '%Y-%m-%d %H:%M:%S',
-                date: { $toDate: '$created_at' } // Convert `created_at` timestamp to a formatted string
-              }
-            },
-            'date.start_date': {
-              $dateToString: {
-                format: '%Y-%m-%d %H:%M:%S',
-                date: { $toDate: '$date.start_date' }
-              }
-            },
-            'date.end_date': {
-              $dateToString: {
-                format: '%Y-%m-%d %H:%M:%S',
-                date: { $toDate: '$date.end_date' }
-              }
-            },
-            team: {
-              $let: {
-                vars: {
-                  activeTeam: {
-                    $filter: {
-                      input: '$team',
-                      as: 'item',
-                      cond: { $eq: ['$$item.is_active', true] }
-                    }
-                  }
-                },
-                in: { $arrayElemAt: ['$$activeTeam', 0] }
-              }
-            },
-            owner: {
-              $let: {
-                vars: {
-                  activeOwner: {
-                    $filter: {
-                      input: '$owner',
-                      as: 'item',
-                      cond: { $eq: ['$$item.is_active', true] }
-                    }
-                  }
-                },
-                in: { $arrayElemAt: ['$$activeOwner', 0] }
-              }
-            }
-          }
-        },
+        ...project_pipelines,
         {
           $sort: {
             created_at: -1
@@ -137,79 +72,11 @@ class ProjectModelAction {
             $and: [{ 'deleted_at.date': null }, { 'deleted_at.user_id': null }]
           }
         },
-        {
-          $lookup: {
-            from: MODEL_COLLECTION_LIST.TEAM,
-            localField: 'teamId',
-            foreignField: '_id',
-            as: 'team'
-          }
-        },
-        {
-          $lookup: {
-            from: MODEL_COLLECTION_LIST.USER,
-            localField: 'ownerId',
-            foreignField: '_id',
-            as: 'owner'
-          }
-        },
-        {
-          $addFields: {
-            created_at: {
-              $dateToString: {
-                format: '%Y-%m-%d %H:%M:%S',
-                date: { $toDate: '$created_at' } // Convert `created_at` timestamp to a formatted string
-              }
-            },
-            'date.start_date': {
-              $dateToString: {
-                format: '%Y-%m-%d %H:%M:%S',
-                date: { $toDate: '$date.start_date' }
-              }
-            },
-            'date.end_date': {
-              $dateToString: {
-                format: '%Y-%m-%d %H:%M:%S',
-                date: { $toDate: '$date.end_date' }
-              }
-            },
-            team: {
-              $let: {
-                vars: {
-                  activeTeam: {
-                    $filter: {
-                      input: '$team',
-                      as: 'item',
-                      cond: { $eq: ['$$item.is_active', true] }
-                    }
-                  }
-                },
-                in: { $arrayElemAt: ['$$activeTeam', 0] }
-              }
-            },
-            owner: {
-              $let: {
-                vars: {
-                  activeOwner: {
-                    $filter: {
-                      input: '$owner',
-                      as: 'item',
-                      cond: { $eq: ['$$item.is_active', true] }
-                    }
-                  }
-                },
-                in: { $arrayElemAt: ['$$activeOwner', 0] }
-              }
-            }
-          }
-        },
+        ...project_pipelines,
         {
           $sort: {
             created_at: -1
           }
-        },
-        {
-          $limit: 1
         }
       ]);
 
@@ -277,7 +144,6 @@ class ProjectModelAction {
         false
       );
     } catch (error: any) {
-      console.log(error);
       return ServerError(
         error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
         error?.errorResponse?.errmsg || 'Failed to create project.',
@@ -358,11 +224,7 @@ class ProjectModelAction {
       );
 
       if (projectUpdateResult) {
-        return ServerResponse(
-          STATUS_CODE.CODE_OK,
-          'Project updated successfully.',
-          projectUpdateResult
-        );
+        return ServerResponse(STATUS_CODE.CODE_OK, 'Project updated successfully.', true);
       }
 
       return ServerError(
@@ -379,44 +241,25 @@ class ProjectModelAction {
     }
   }
 
-  async updateStatusProjectAction(args: { projectId: string; status: boolean }): Promise<any> {
+  async updateStatusProjectAction(args: { projectId: string }): Promise<any> {
     try {
       const isProjectOperation = await projectModel.aggregate([
         {
-          $facet: {
-            isExiting: [
-              {
-                $match: {
-                  _id: new mongoose.Types.ObjectId(args.projectId),
-                  is_active: true,
-                  deleted_at: {
-                    date: null,
-                    user_id: null
-                  }
-                }
-              }
-            ],
-            isCheckCurrentStatus: [
-              {
-                $match: {
-                  _id: new mongoose.Types.ObjectId(args.projectId),
-                  is_active: !args.status,
-                  deleted_at: {
-                    date: null,
-                    user_id: null
-                  }
-                }
-              }
-            ]
+          $match: {
+            _id: new mongoose.Types.ObjectId(args.projectId),
+            deleted_at: {
+              date: null,
+              user_id: null
+            }
           }
         }
       ]);
 
       const [result] = isProjectOperation;
 
-      if (result.length === 0) {
+      if (!result) {
         return ServerError(
-          STATUS_CODE.CODE_CONFLICT,
+          STATUS_CODE.CODE_NOT_FOUND,
           'Project is not exiting. Please check it and try again.',
           null
         );
@@ -428,7 +271,7 @@ class ProjectModelAction {
         },
         {
           $set: {
-            is_active: args.status,
+            is_active: !result.is_active,
             updated_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC')
           }
         },
@@ -437,7 +280,7 @@ class ProjectModelAction {
         }
       );
 
-      const statusMsg = args.status ? 'activated' : 'deactivated';
+      const statusMsg = !result.is_active ? 'activated' : 'deactivated';
 
       if (projectUpdateStatusResult) {
         return ServerResponse(STATUS_CODE.CODE_OK, `Project is ${statusMsg} successfully.`, true);
@@ -449,6 +292,7 @@ class ProjectModelAction {
         false
       );
     } catch (error: any) {
+      console.log(error);
       return ServerError(
         error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
         error?.errorResponse?.errmsg || 'Failed to update status project.',
@@ -459,6 +303,24 @@ class ProjectModelAction {
 
   async deleteTempProjectAction(args: { projectId: string; name: string }): Promise<any> {
     try {
+      const isDeActive = await projectModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(args.projectId),
+            name: args.name,
+            is_active: false
+          }
+        }
+      ]);
+
+      if (!isDeActive.length) {
+        return ServerError(
+          STATUS_CODE.CODE_NOT_FOUND,
+          'Sorry! This project is not deactivated try to first after deleted.',
+          null
+        );
+      }
+
       const isExiting = await projectModel.aggregate([
         {
           $match: {
@@ -473,9 +335,9 @@ class ProjectModelAction {
         }
       ]);
 
-      if (isExiting.length > 0) {
+      if (!isExiting.length) {
         return ServerError(
-          STATUS_CODE.CODE_CONFLICT,
+          STATUS_CODE.CODE_NOT_FOUND,
           'Project is not exiting. Please check it and try again.',
           null
         );
@@ -519,6 +381,69 @@ class ProjectModelAction {
     }
   }
 
+  async recoverTempProjectAction(args: { projectId: string; name: string }): Promise<any> {
+    try {
+      const isExiting = await projectModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(args.projectId),
+            name: args.name,
+            is_active: false,
+            $and: [
+              { 'deleted_at.date': { $ne: null } }
+              // { "deleted_at.user_id": { $ne: null } }
+            ]
+          }
+        }
+      ]);
+
+      if (!isExiting.length) {
+        return ServerError(
+          STATUS_CODE.CODE_CONFLICT,
+          'Project is not exiting. Please check it and try again.',
+          null
+        );
+      }
+
+      const projectRecoverResult = await projectModel.findOneAndUpdate(
+        {
+          _id: args.projectId,
+          name: args.name,
+          is_active: false
+        },
+        {
+          $set: {
+            is_active: true,
+            updated_at: DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC'),
+            deleted_at: {
+              date: null,
+              user_id: null
+            }
+          }
+        },
+        {
+          new: true
+        }
+      );
+
+      if (projectRecoverResult) {
+        return ServerResponse(STATUS_CODE.CODE_OK, 'Project is restore successfully.', true);
+      }
+
+      return ServerError(
+        STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        'Sorry! This project is not restored. Please tru again.',
+        false
+      );
+    } catch (error: any) {
+      return ServerError(
+        error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
+        error?.errorResponse?.errmsg || 'Failed to delete project.',
+        error
+      );
+    }
+  }
+
   async deletePermanentlyProjectAction(args: { projectId: string; name: string }): Promise<any> {
     try {
       const isExiting = await projectModel.aggregate([
@@ -527,17 +452,17 @@ class ProjectModelAction {
             _id: new mongoose.Types.ObjectId(args.projectId),
             name: args.name,
             is_active: false,
-            deleted_at: {
-              date: null,
-              user_id: null
-            }
+            $and: [
+              { 'deleted_at.date': { $ne: null } }
+              // { "deleted_at.user_id": { $ne: null } }
+            ]
           }
         }
       ]);
 
-      if (isExiting.length > 0) {
+      if (!isExiting.length) {
         return ServerError(
-          STATUS_CODE.CODE_CONFLICT,
+          STATUS_CODE.CODE_NOT_FOUND,
           'Project is not exiting. Please check it and try again.',
           null
         );
@@ -546,10 +471,10 @@ class ProjectModelAction {
       const projectDeleteResult = await projectModel.findOneAndDelete({
         _id: args.projectId,
         is_active: false,
-        deleted_at: {
-          date: { $exists: true, $ne: null },
-          user_id: { $exists: true, $ne: null }
-        }
+        $and: [
+          { 'deleted_at.date': { $ne: null } }
+          // { "deleted_at.user_id": { $ne: null } }
+        ]
       });
 
       if (projectDeleteResult) {
@@ -576,3 +501,152 @@ class ProjectModelAction {
 }
 
 export default new ProjectModelAction();
+
+/**
+ * 
+ * [
+  {
+    $match: {
+      is_active: true
+      // $expr: {
+      //   $cond: {
+      //     if: { $eq: [0, 1] },
+      //     then: {
+      //       $and: [
+      //         { $eq: ["$deleted_at.date", null] },
+      //         {
+      //           $eq: ["$deleted_at.user_id", null]
+      //         }
+      //       ]
+      //     },
+      //     else: {
+      //       $or: [
+      //         { $ne: ["$deleted_at.date", null] },
+      //         {
+      //           $ne: ["$deleted_at.user_id", null]
+      //         }
+      //       ]
+      //     }
+      //   }
+      // }
+    }
+  },
+  {
+    $lookup: {
+      from: "tbl_teams",
+      localField: "teamId",
+      foreignField: "_id",
+      as: "team"
+    }
+  },
+  {
+    $lookup: {
+      from: "tbl_users",
+      localField: "ownerId",
+      foreignField: "_id",
+      as: "owner"
+    }
+  },
+  {
+    $addFields: {
+      created_at: {
+        $dateToString: {
+          format: "%Y-%m-%d %H:%M:%S",
+          date: { $toDate: "$created_at" }
+        }
+      },
+      "date.start_date": {
+        $dateToString: {
+          format: "%Y-%m-%d %H:%M:%S",
+          date: { $toDate: "$date.start_date" }
+        }
+      },
+      "date.end_date": {
+        $dateToString: {
+          format: "%Y-%m-%d %H:%M:%S",
+          date: { $toDate: "$date.end_date" }
+        }
+      },
+      owner: {
+        $let: {
+          vars: {
+            activeOwner: {
+              $filter: {
+                input: "$owner",
+                as: "item",
+                cond: {
+                  $eq: ["$$item.is_active", true]
+                }
+              }
+            }
+          },
+          in: {
+            $arrayElemAt: ["$$activeOwner", 0]
+          }
+        }
+      }
+    }
+  },
+  {
+    $lookup: {
+      from: "tbl_roles",
+      localField: "owner.role",
+      foreignField: "_id",
+      as: "owner.role"
+    }
+  },
+  {
+    $lookup: {
+      from: "tbl_user_tags",
+      localField: "owner.tag",
+      foreignField: "_id",
+      as: "owner.tag"
+    }
+  },
+  {
+    $lookup: {
+      from: "tbl_departments",
+      localField: "owner.department",
+      foreignField: "_id",
+      as: "owner.department"
+    }
+  },
+  {
+    $addFields: {
+      "owner.created_at": {
+        $cond: {
+          if: { $ifNull: ["$owner", false] }, // Check if owner exists
+          then: {
+            $dateToString: {
+              format: "%Y-%m-%d %H:%M:%S",
+              date: {
+                $toDate: "$owner.created_at"
+              }
+            }
+          },
+          else: null
+        }
+      },
+      "owner.dob": {
+        $cond: {
+          if: { $ifNull: ["$owner", false] }, // Check if owner exists
+          then: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: {
+                $toDate: "$owner.dob"
+              }
+            }
+          },
+          else: null
+        }
+      },
+    }
+  },
+  {
+    $sort: {
+      created_at: -1
+    }
+  }
+]
+ */

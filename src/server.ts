@@ -20,8 +20,6 @@ dotenv.config();
 const app: Application = express();
 app.use(bodyParser.json());
 
-databaseConnection();
-
 const corsOptions = {
   origin: 'http://localhost:3000',
   credentials: true
@@ -41,6 +39,8 @@ app.use(FILE_UPLOAD_PATH.GET_IMAGES, express.static(path.join(assetsPath, 'image
 // TODO: Function to start the server
 const mainServer = async (): Promise<void> => {
   try {
+    await databaseConnection();
+
     // NOTE: Create an ApolloServer instance
     const apolloServer = new ApolloServer({
       typeDefs,

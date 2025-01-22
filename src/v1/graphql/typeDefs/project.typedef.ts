@@ -54,8 +54,9 @@ const projectMutations = gql`
   extend type Mutation {
     createProject(data: projectDataInput): apiBooleanResponseType
     updateProject(id: ID!, data: projectDataInput): apiBooleanResponseType
-    updateStatusProject(id: ID!, status: Boolean): apiBooleanResponseType
-    deleteTempPermission(id: ID!, name: String!): apiBooleanResponseType
+    updateStatusProject(id: ID!): apiBooleanResponseType
+    deleteTempProject(id: ID!, name: String!): apiBooleanResponseType
+    recoverTempProject(id: ID!, name: String!): apiBooleanResponseType
     deletePermanentlyProject(id: ID!, name: String!): apiBooleanResponseType
   }
 `;
