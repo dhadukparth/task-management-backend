@@ -186,12 +186,23 @@ export interface ITaskCategory extends Document {
 }
 
 export interface ITaskGroup extends Document {
-  name: string;
-  description: string;
-  color: string;
-  is_active: boolean;
-  created_at: number;
-  updated_at: number;
+  projectId: mongoose.Types.ObjectId;
+  group: {
+    name: string;
+    description: string;
+    color: string;
+    is_active: boolean;
+    created_at: number;
+    updated_at: number;
+  }[];
+  labels: {
+    name: string;
+    description: string;
+    color: string;
+    is_active: boolean;
+    created_at: number;
+    updated_at: number;
+  }[];
 }
 
 export interface IProjectModel extends Document {

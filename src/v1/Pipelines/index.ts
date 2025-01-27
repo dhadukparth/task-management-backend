@@ -1,6 +1,6 @@
+export * as rolePipelines from './role-pipelines';
 export * as teamPipelines from './team-pipelines';
 export * as userPipelines from './user-pipelines';
-export * as rolePipelines from './role-pipelines';
 
 export const pipeline_created_at = {
   created_at: {
@@ -10,6 +10,13 @@ export const pipeline_created_at = {
     }
   }
 };
+
+export const pipeline_dateFormat = (field: string) => ({
+  $dateToString: {
+    format: '%Y-%m-%d %H:%M:%S',
+    date: { $toDate: field } // Convert `created_at` timestamp to a formatted string
+  }
+});
 
 export const pipeline_birth_date = {
   $cond: {

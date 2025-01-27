@@ -1,14 +1,21 @@
-import { taskGroupController } from "../../controller";
+import { taskGroupController } from '../../controller';
 
 export default {
   Query: {
-    getAllTaskGroup: taskGroupController.getAllTaskGroup,
-    getSingleTaskGroup: taskGroupController.getSingleTaskGroup
+    getAllTaskGroupLabel: taskGroupController.getAllTaskGroup,
+    getSingleTaskGroupLabel: taskGroupController.getSingleTaskGroup
   },
   Mutation: {
+    // group
     createTaskGroup: taskGroupController.createTaskGroup,
     updateTaskGroup: taskGroupController.updateTaskGroup,
     updateStatusTaskGroup: taskGroupController.updateStatusTaskGroup,
-    deletePermanentlyTaskGroup: taskGroupController.deleteTaskGroup
+    deletePermanentlyTaskGroup: taskGroupController.deletePermanentlyTaskGroup,
+
+    // label
+    createTaskLabel: taskGroupController.createTaskLabel,
+    updateTaskLabel: taskGroupController.updateTaskLabel,
+    updateStatusTaskLabel: taskGroupController.updateStatusTaskLabel,
+    deletePermanentlyTaskLabel: taskGroupController.deletePermanentlyTaskLabel
   }
 };
