@@ -154,7 +154,6 @@ class UserCredentialsAction {
         false
       );
     } catch (error: any) {
-      console.log(error);
       const message = error?.errorResponse?.errmsg || 'Internal Server Error';
       return ServerError(STATUS_CODE.CODE_INTERNAL_SERVER_ERROR, message, error);
     }
@@ -218,8 +217,6 @@ class UserCredentialsAction {
           new: true
         }
       );
-
-      console.log(convertToEncrypt);
 
       if (updateUser) {
         return ServerResponse(

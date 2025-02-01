@@ -24,6 +24,7 @@ const corsOptions = {
   origin: 'http://localhost:3000',
   credentials: true
 };
+
 app.use(cors(corsOptions));
 
 // NOTE: Apply the middleware for handling file uploads
@@ -51,7 +52,12 @@ const mainServer = async (): Promise<void> => {
     await apolloServer.start();
 
     // NOTE: Apply Apollo middleware to Express app
-    app.use('/graphql', expressMiddleware(apolloServer));
+    app.use(
+      '/graphql',
+      expressMiddleware(apolloServer, {
+        context: async ({ req, res }) => ({ req, res })
+      })
+    );
 
     // NOTE: Start Express server
     app.listen(ENVIRONMENT_VARIABLES.NODE_PORT, () => {

@@ -15,7 +15,6 @@ class AuthController {
       email: userData.email,
       password: userData.password
     };
-    console.log(response);
 
     const apiResponse: any = await userAction.userLoginAction(payload, { response });
 

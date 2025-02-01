@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { projectModel } from '.';
 import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
-import { project_pipelines } from '../../Pipelines/project-pipelines';
+import { projectPipelines } from '../../Pipelines';
 import { ServerError, ServerResponse } from '../../utils/response';
 
 type ProjectType = {
@@ -44,7 +44,7 @@ class ProjectModelAction {
             }
           }
         },
-        ...project_pipelines,
+        ...projectPipelines.project_pipelines,
         {
           $sort: {
             created_at: -1
@@ -72,7 +72,7 @@ class ProjectModelAction {
             $and: [{ 'deleted_at.date': null }, { 'deleted_at.user_id': null }]
           }
         },
-        ...project_pipelines,
+        ...projectPipelines.project_pipelines,
         {
           $sort: {
             created_at: -1
@@ -92,7 +92,6 @@ class ProjectModelAction {
         false
       );
     } catch (error: any) {
-      console.log('====== error =======>', error);
       return ServerError(
         error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
         error?.errorResponse?.errmsg || 'Failed to fetch project list.',
@@ -292,7 +291,6 @@ class ProjectModelAction {
         false
       );
     } catch (error: any) {
-      console.log(error);
       return ServerError(
         error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
         error?.errorResponse?.errmsg || 'Failed to update status project.',

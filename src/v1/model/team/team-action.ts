@@ -212,7 +212,6 @@ class TeamModelAction {
         false
       );
     } catch (error: any) {
-      console.log(error);
       return ServerError(
         error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
         error?.errorResponse?.errmsg || 'Failed to fetch project list.',

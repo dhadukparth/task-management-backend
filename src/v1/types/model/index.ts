@@ -222,3 +222,30 @@ export interface IProjectModel extends Document {
     user_id: mongoose.Types.ObjectId | null;
   };
 }
+
+export interface ITaskModel extends Document {
+  project_id: mongoose.Types.ObjectId;
+  task_list: {
+    name: string;
+    description: string;
+    label_id: mongoose.Types.ObjectId[];
+    group_id: mongoose.Types.ObjectId;
+    user_assign: mongoose.Types.ObjectId;
+    date: {
+      start_date: number;
+      end_date: number;
+    };
+    is_active: boolean;
+    created_at: number;
+    updated_at: number;
+    deleted_at: {
+      date: number | null;
+      user_id: mongoose.Types.ObjectId | null;
+    };
+  }[];
+  created_at: number;
+  deleted_at: {
+    date: number | null;
+    user_id: mongoose.Types.ObjectId | null;
+  };
+}

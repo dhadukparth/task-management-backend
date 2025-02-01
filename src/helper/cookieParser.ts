@@ -88,7 +88,6 @@ export async function hasCookie(req: Request, name: string): Promise<boolean> {
  */
 export function logCookies() {
   return async (req: Request, _: Response, next: Function): Promise<void> => {
-    console.log('Cookies:', req.cookies);
     next();
   };
 }

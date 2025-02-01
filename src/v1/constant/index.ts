@@ -9,9 +9,10 @@ export const MODEL_COLLECTION_LIST = {
   USER: 'tbl_users',
   USER_TAGS: 'tbl_user_tags',
   TEAM: 'tbl_teams',
+  PROJECT: 'tbl_projects',
   TASK_CATEGORY: 'tbl_task_categories',
   TASK_GROUP: 'tbl_task_groups',
-  PROJECT: 'tbl_projects'
+  TASK: 'tbl_task'
 };
 
 export const FILE_UPLOAD_PATH = {

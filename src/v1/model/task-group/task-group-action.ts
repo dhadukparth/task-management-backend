@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { taskGroupModel } from '.';
 import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
-import { taskGroup_pipeline } from '../../Pipelines/task-group-pipelines';
+import { taskGroupPipelines } from '../../Pipelines';
 import { ServerError, ServerResponse } from '../../utils/response';
 
 type taskGroupTypeEnum = 'GROUP' | 'LABEL';
@@ -11,7 +11,7 @@ class TaskGroupModelAction {
   async getAllTaskGroupAction(args: { type: taskGroupTypeEnum }): Promise<any> {
     try {
       const taskGroupList = await taskGroupModel.aggregate([
-        ...taskGroup_pipeline,
+        ...taskGroupPipelines.taskGroup_pipeline,
         {
           $project: {
             project: 1,
@@ -51,7 +51,7 @@ class TaskGroupModelAction {
             projectId: new mongoose.Types.ObjectId(args.projectId)
           }
         },
-        ...taskGroup_pipeline
+        ...taskGroupPipelines.taskGroup_pipeline
       ]);
 
       if (resultAction?.length !== 0) {

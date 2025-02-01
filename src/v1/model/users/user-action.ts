@@ -67,8 +67,6 @@ class UserModelAction extends UserCredentialsAction {
         }
       ]);
 
-      console.log(JSON.stringify(getAllUsers));
-
       if (getAllUsers.length) {
         return ServerResponse(STATUS_CODE.CODE_OK, 'All users fetched successfully', getAllUsers);
       } else {

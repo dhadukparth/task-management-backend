@@ -65,7 +65,6 @@ class TaskCategoryModelAction {
         false
       );
     } catch (error: any) {
-      console.log(error);
       return ServerError(
         STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
         'Failed to fetch task category.',
@@ -269,7 +268,6 @@ class TaskCategoryModelAction {
 
       return ServerResponse(STATUS_CODE.CODE_OK, 'Task category deleted successfully', true);
     } catch (error: any) {
-      console.log(error);
       return ServerError(
         error?.errorResponse?.code || STATUS_CODE.CODE_INTERNAL_SERVER_ERROR,
         error?.errorResponse?.errmsg || 'Failed to deleted task category.',

@@ -49,7 +49,6 @@ class PermissionController {
     };
 
     const actionResponse = await PermissionModelAction.createPermissionAction(newPermission);
-    console.log(actionResponse)
 
     if (actionResponse?.status === STATUS_CODE.CODE_CREATED) {
       return ServerResponse(actionResponse?.status, actionResponse?.message, actionResponse?.data);

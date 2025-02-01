@@ -1,16 +1,17 @@
 import { gql } from 'graphql-tag';
+import authTypeDefs from './auth.typedef';
 import departmentTypeDefs from './department.typedef';
 import featureTypeDefs from './features.typedef';
 import mediaTypeDefs from './media.typedef';
 import permissionTypeDefs from './permission.typedef';
+import projectTypeDefs from './project.typedef';
 import rolesTypeDefs from './roles.typedef';
 import taskCategoryTypeDefs from './task-category.typedef';
 import taskGroupTypeDefs from './task-group.typedef';
+import taskListTypedef from './task.typedef';
 import teamTypeDefs from './team.typedef';
 import userTagTypeDefs from './user-tag.typedef';
 import userTypeDefs from './user.typedef';
-import authTypeDefs from './auth.typedef';
-import projectTypeDefs from './project.typedef';
 
 export default gql`
   type Query {
@@ -45,4 +46,5 @@ export default gql`
   ${taskCategoryTypeDefs}
   ${taskGroupTypeDefs}
   ${projectTypeDefs}
+  ${taskListTypedef}
 `;

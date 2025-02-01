@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
-import { MODEL_COLLECTION_LIST } from '../../constant';
 import { rolePipelines } from '../../Pipelines';
 import { IActionRoles } from '../../types/model/model-action';
 import { ServerError, ServerResponse } from '../../utils/response';
@@ -86,7 +85,6 @@ class RolesModelAction {
         return ServerError(STATUS_CODE.CODE_NOT_FOUND, 'SORRY! ROLES LIST NOT FOUND', null, []);
       }
     } catch (error: any) {
-      console.log(error);
       return ServerError(error?.errorResponse?.code, error?.errorResponse?.errmsg, error);
     }
   }

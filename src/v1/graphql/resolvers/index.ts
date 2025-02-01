@@ -7,6 +7,7 @@ import projectResolvers from './project.resolvers';
 import rolesResolvers from './roles.resolvers';
 import taskCategoryResolvers from './task-category.resolvers';
 import taskGroupResolvers from './task-group.resolvers';
+import taskResolvers from './task.resolvers';
 import teamResolvers from './team.resolvers';
 import userTagResolvers from './user-tag.resolvers';
 import userResolvers from './user.resolvers';
@@ -23,7 +24,8 @@ export default {
     ...teamResolvers.Query,
     ...taskCategoryResolvers.Query,
     ...taskGroupResolvers.Query,
-    ...projectResolvers.Query
+    ...projectResolvers.Query,
+    ...taskResolvers.Query
   },
   Mutation: {
     ...permissionResolvers.Mutation,
@@ -37,6 +39,7 @@ export default {
     ...taskCategoryResolvers.Mutation,
     ...taskGroupResolvers.Mutation,
     ...projectResolvers.Mutation,
+    ...taskResolvers.Mutation,
     ...authResolvers.Mutation
   }
 };
