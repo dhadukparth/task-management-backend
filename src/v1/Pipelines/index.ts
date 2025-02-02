@@ -1,3 +1,4 @@
+export * as mediaPipelines from './media-pipelines';
 export * as projectPipelines from './project-pipelines';
 export * as rolePipelines from './role-pipelines';
 export * as taskGroupPipelines from './task-group-pipelines';

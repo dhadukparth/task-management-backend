@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 
 const mediaType = gql`
   type FileObjectType {
+    fileType: String
     fileName: String
     filePath: String
   }
@@ -10,9 +11,19 @@ const mediaType = gql`
     _id: String
     name: String
     description: String
-    fileType: String
     file: FileObjectType
     created_at: String
+  }
+
+  type createSingleMediaUpload {
+    fileId: String
+    fileName: String
+  }
+
+  type apiSingleUploadMediaResponse {
+    status: Int
+    message: String
+    data: createSingleMediaUpload
   }
 
   type SingleMediaResponseType {
@@ -42,25 +53,22 @@ const mediaInputTypes = gql`
     description: String
     fileType: FileType
   }
-
-  input MediaDeleteInput {
-    id: String
-    name: String
-  }
 `;
 
 const mediaQueries = gql`
   type Query {
     getAllMedia: AllMediaResponseType
-    getSingleMedia(mediaData: MediaDeleteInput): SingleMediaResponseType
+    getSingleMedia(fileId: String, name: String): SingleMediaResponseType
   }
 `;
 
 const mediaMutations = gql`
-  scalar Upload
   type Mutation {
-    singleUploadMedia(uploadFile: Upload!, mediaData: MediaUploadInput): SingleMediaResponseType
-    deleteMedia(mediaData: MediaDeleteInput): SingleMediaResponseType
+    singleUploadMedia(
+      uploadFile: Upload!
+      mediaData: MediaUploadInput
+    ): apiSingleUploadMediaResponse
+    deleteMedia(fileId: String!, name: String!): apiBooleanResponseType
   }
 `;
 

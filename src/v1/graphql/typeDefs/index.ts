@@ -14,6 +14,8 @@ import userTagTypeDefs from './user-tag.typedef';
 import userTypeDefs from './user.typedef';
 
 export default gql`
+  scalar Upload
+
   type Query {
     _empty: String
   }

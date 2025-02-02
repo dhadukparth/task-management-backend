@@ -33,9 +33,9 @@ app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 // NOTE: Import the 'path' module for handling and transforming file paths
 const assetsPath = path.join(process.cwd(), FILE_UPLOAD_PATH.ROOT);
 
-// NOTE: Serve static files from the 'images' subdirectory within the specified root path
-// NOTE: The static files will be accessible at the '/images' route
-app.use(FILE_UPLOAD_PATH.GET_IMAGES, express.static(path.join(assetsPath, 'images')));
+// NOTE: Serve static files from the 'image' subdirectory within the specified root path
+// NOTE: The static files will be accessible at the '/image' route
+app.use(`/${FILE_UPLOAD_PATH.GET_IMAGE}`, express.static(path.join(assetsPath, 'images')));
 
 // TODO: Function to start the server
 const mainServer = async (): Promise<void> => {

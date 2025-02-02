@@ -1,3 +1,4 @@
+import { GraphQLUpload } from 'graphql-upload-ts';
 import authResolvers from './auth.resolvers';
 import departmentResolvers from './department.resolvers';
 import featureResolvers from './features.resolvers';
@@ -13,6 +14,7 @@ import userTagResolvers from './user-tag.resolvers';
 import userResolvers from './user.resolvers';
 
 export default {
+  Upload: GraphQLUpload,
   Query: {
     ...permissionResolvers.Query,
     ...featureResolvers.Query,

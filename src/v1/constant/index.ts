@@ -17,7 +17,9 @@ export const MODEL_COLLECTION_LIST = {
 
 export const FILE_UPLOAD_PATH = {
   ROOT: 'src/assets',
-  GET_IMAGES: '/images',
+  GET_IMAGE: 'image',
+  GET_ICON: 'icon',
+  GET_DOCUMENT: 'document',
   DEFAULT: 'src/assets/default',
   IMAGE_PATH: 'src/assets/images',
   DOCUMENT_PATH: 'src/assets/documents',
@@ -28,4 +30,10 @@ export const APP_TIMERS = {
   FP_VERIFY_EXPIRED: '10m',
   ACCESS_TOKEN_EXPIRED: '60m',
   REFRESH_TOKEN_EXPIRED: '30d'
+};
+
+export const UPLOAD_FILE_TYPE = {
+  IMAGE: 'IMAGE',
+  DOCUMENT: 'DOCUMENT',
+  ICON: 'ICON'
 };

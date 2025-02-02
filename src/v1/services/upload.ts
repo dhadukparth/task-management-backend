@@ -1,9 +1,8 @@
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import path from 'path';
 import { pipeline } from 'stream/promises';
-import DateTimeUtils from '../../helper/moment';
-import { generateUniqueKey } from '../../helper/uuid';
-import { FILE_UPLOAD_PATH } from '../constant';
+import { FILE_UPLOAD_PATH, UPLOAD_FILE_TYPE } from '../constant';
+import { generateFile } from '../utils/common';
 
 export type ApolloFileType = 'ICON' | 'IMAGE' | 'DOCUMENT';
 
@@ -13,10 +12,15 @@ type ApolloFileUploadReturn = {
   filePath: string;
 };
 
-const ApolloFileUpload = async (fileType: ApolloFileType, file: any): Promise<ApolloFileUploadReturn> => {
+const ApolloFileUpload = async (
+  fileType: ApolloFileType,
+  file: any,
+  dynamicData: string
+): Promise<ApolloFileUploadReturn> => {
   try {
+    console.log(file);
     // NOTE: Await the promise to get the file details
-    const { createReadStream, filename } = await file.file;
+    const { createReadStream, filename } = await file;
 
     if (!filename) {
       throw new Error('Filename is undefined');
@@ -24,22 +28,16 @@ const ApolloFileUpload = async (fileType: ApolloFileType, file: any): Promise<Ap
 
     // NOTE: Determine the correct upload path based on the file type
     let fileUploadPath: string = FILE_UPLOAD_PATH.DEFAULT;
-    if (fileType === 'DOCUMENT') {
+    if (fileType === UPLOAD_FILE_TYPE.DOCUMENT) {
       fileUploadPath = FILE_UPLOAD_PATH.DOCUMENT_PATH;
-    } else if (fileType === 'IMAGE') {
+    } else if (fileType === UPLOAD_FILE_TYPE.IMAGE) {
       fileUploadPath = FILE_UPLOAD_PATH.IMAGE_PATH;
-    } else if (fileType === 'ICON') {
+    } else if (fileType === UPLOAD_FILE_TYPE.ICON) {
       fileUploadPath = FILE_UPLOAD_PATH.ICON_PATH;
     }
 
     // NOTE: Generate a unique filename
-    const utcDateTime = DateTimeUtils.convertToUTC(DateTimeUtils.getToday(), 'UTC');
-    const formattedDate = utcDateTime
-      .toString()
-      .match(/.{1,4}/g)
-      ?.join('-');
-    const uniqueKey = generateUniqueKey(16, 4);
-    const customFileName = `${uniqueKey}--${formattedDate}`;
+    const customFileName = await generateFile(dynamicData);
     const finalFileName = `${customFileName.replace(/-/g, '_')}${path.extname(filename)}`;
 
     // NOTE: Construct the file path
