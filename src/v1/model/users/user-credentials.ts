@@ -4,6 +4,7 @@ import DateTimeUtils from '../../../helper/moment';
 import STATUS_CODE from '../../../helper/statusCode';
 import { generateUniqueKey } from '../../../helper/uuid';
 import { APP_TIMERS } from '../../constant';
+import { cookieStorage } from '../../services/cookies-storage';
 import { ServerError, ServerResponse } from '../../utils/response';
 import { AppTokens } from '../../utils/tokens';
 import { userModel } from './user';
@@ -76,6 +77,8 @@ class UserCredentialsAction {
       );
 
       if (updateLoginTokens) {
+        cookieStorage.createCookie(response, '_at', generateAccessToken);
+
         return ServerResponse(STATUS_CODE.CODE_OK, `User login successfully.`, {
           accessToken: generateAccessToken,
           refreshToken: generateRefreshToken
@@ -88,6 +91,7 @@ class UserCredentialsAction {
         null
       );
     } catch (error: any) {
+      console.log(error);
       const message = error?.errorResponse?.errmsg || 'Internal Server Error';
       return ServerError(STATUS_CODE.CODE_INTERNAL_SERVER_ERROR, message, error);
     }

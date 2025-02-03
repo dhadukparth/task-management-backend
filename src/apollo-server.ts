@@ -4,15 +4,15 @@ import ENVIRONMENT_VARIABLES from './config/env.config';
 
 import { expressMiddleware } from '@apollo/server/express4';
 import clc from 'cli-color';
-import resolvers from './v1/graphql/resolvers';
-import typeDefs from './v1/graphql/typeDefs';
+import { graphqlContext, graphqlResolvers, graphqlTypeDefs } from './v1/graphql';
 
 const createApolloServer = async (app: Application): Promise<void> => {
   try {
     // NOTE: Create an ApolloServer instance
     const apolloServer = new ApolloServer({
-      typeDefs,
-      resolvers
+      typeDefs: graphqlTypeDefs.default,
+      resolvers: graphqlResolvers.default
+      // formatError: graphqlFormatError.graphqlFormatError
     });
 
     // NOTE: Start Apollo Server
@@ -22,7 +22,7 @@ const createApolloServer = async (app: Application): Promise<void> => {
     app.use(
       '/graphql',
       expressMiddleware(apolloServer, {
-        context: async ({ req, res }) => ({ req, res })
+        context: graphqlContext.context
       })
     );
 

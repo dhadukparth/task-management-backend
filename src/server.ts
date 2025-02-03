@@ -1,4 +1,5 @@
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Application } from 'express';
@@ -13,6 +14,8 @@ import { FILE_UPLOAD_PATH } from './v1/constant';
 dotenv.config();
 
 const app: Application = express();
+
+app.use(cookieParser());
 app.use(bodyParser.json());
 
 const corsOptions = {

@@ -1,6 +1,4 @@
-import STATUS_CODE from '../../helper/statusCode';
 import userAction from '../model/users/user-action';
-import { ServerError, ServerResponse } from '../utils/response';
 
 class AuthController {
   /**
@@ -10,19 +8,15 @@ class AuthController {
    * @param {{ userData: any }} args - Contains user email and password for login.
    *
    */
-  async userLogin(_parent: any, { userData }: { userData: any }, { response }: any) {
+  async userLogin(_parent: any, { userData }: { userData: any }, { req, res }: any) {
     const payload = {
       email: userData.email,
       password: userData.password
     };
 
-    const apiResponse: any = await userAction.userLoginAction(payload, { response });
+    const apiResponse: any = await userAction.userLoginAction(payload, { response: res });
 
-    if (apiResponse?.status === STATUS_CODE.CODE_OK) {
-      return ServerResponse(apiResponse?.status, apiResponse?.message, apiResponse?.data);
-    }
-
-    return ServerError(apiResponse?.status, apiResponse?.message, apiResponse?.error);
+    return apiResponse;
   }
 
   /**
