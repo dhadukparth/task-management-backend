@@ -1,7 +1,6 @@
-import STATUS_CODE from '../../helper/statusCode';
+import { GraphQLError } from 'graphql';
 import DepartmentModelAction from '../model/department/department-action';
 import { IActionDepartment } from '../types/model/model-action';
-import { ServerError, ServerResponse } from '../utils/response';
 
 class DepartmentController {
   /**
@@ -10,6 +9,12 @@ class DepartmentController {
    *
    */
   async fetchAllDepartment() {
+    throw new GraphQLError('NOT FOUND', {
+      extensions: {
+        code: 'DEPARTMENT_NOT_FOUND',
+        details: 'Department not found in the database.'
+      }
+    });
     const actionResponse = await DepartmentModelAction.fetchAllDepartmentAction();
     return actionResponse;
   }

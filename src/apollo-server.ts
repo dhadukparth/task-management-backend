@@ -4,6 +4,7 @@ import ENVIRONMENT_VARIABLES from './config/env.config';
 
 import { expressMiddleware } from '@apollo/server/express4';
 import clc from 'cli-color';
+import { GraphQLFormattedError } from 'graphql';
 import resolvers from './v1/graphql/resolvers';
 import typeDefs from './v1/graphql/typeDefs';
 
@@ -12,7 +13,24 @@ const createApolloServer = async (app: Application): Promise<void> => {
     // NOTE: Create an ApolloServer instance
     const apolloServer = new ApolloServer({
       typeDefs,
-      resolvers
+      resolvers,
+      formatError: (
+        formattedError: GraphQLFormattedError,
+        error: unknown
+      ): GraphQLFormattedError => {
+        console.log('formattedError', formattedError);
+        return {
+          message: formattedError.message || 'Internal Server Error',
+          extensions: {
+            // path: formattedError.path,
+            code: formattedError.extensions?.code || 500,
+            details: formattedError.extensions?.details || null,
+            http: {
+              status: 5000
+            }
+          }
+        };
+      }
     });
 
     // NOTE: Start Apollo Server
