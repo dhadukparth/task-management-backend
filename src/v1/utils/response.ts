@@ -25,7 +25,7 @@ export const ServerError = (
   status: number,
   message: string,
   error: any,
-  data: any = false
+  data: any = null
 ): ServerErrorType => {
   return {
     status,

@@ -12,6 +12,7 @@ import { userModel } from './user';
 class UserCredentialsAction {
   async userLoginAction(args: { email: string; password: string }, { response }: any) {
     try {
+      console.log(response);
       const checkUser = {
         'email.email_address': args.email,
         is_active: true,

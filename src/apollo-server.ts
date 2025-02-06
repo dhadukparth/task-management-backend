@@ -4,6 +4,7 @@ import ENVIRONMENT_VARIABLES from './config/env.config';
 
 import { expressMiddleware } from '@apollo/server/express4';
 import clc from 'cli-color';
+import { GraphQLFormattedError } from 'graphql';
 import { graphqlContext, graphqlResolvers, graphqlTypeDefs } from './v1/graphql';
 
 const createApolloServer = async (app: Application): Promise<void> => {
@@ -11,7 +12,19 @@ const createApolloServer = async (app: Application): Promise<void> => {
     // NOTE: Create an ApolloServer instance
     const apolloServer = new ApolloServer({
       typeDefs: graphqlTypeDefs.default,
-      resolvers: graphqlResolvers.default
+      resolvers: graphqlResolvers.default,
+      formatError: (formattedError: GraphQLFormattedError): GraphQLFormattedError => {
+        // console.log(formattedError);
+        return {
+          message: formattedError.message,
+          locations: formattedError.locations,
+          path: formattedError.path,
+          extensions: {
+            code: formattedError.extensions?.code || 'INTERNAL_SERVER_ERROR',
+            details: formattedError.extensions?.details
+          }
+        };
+      }
       // formatError: graphqlFormatError.graphqlFormatError
     });
 
@@ -22,7 +35,7 @@ const createApolloServer = async (app: Application): Promise<void> => {
     app.use(
       '/graphql',
       expressMiddleware(apolloServer, {
-        context: graphqlContext.context
+        context: graphqlContext.default
       })
     );
 

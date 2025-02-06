@@ -1,7 +1,7 @@
 import STATUS_CODE from '../../helper/statusCode';
 import DepartmentModelAction from '../model/department/department-action';
 import { IActionDepartment } from '../types/model/model-action';
-import { ServerError, ServerResponse } from '../utils/response';
+import { ServerError } from '../utils/response';
 
 class DepartmentController {
   /**
@@ -9,9 +9,20 @@ class DepartmentController {
    * REVIEW: The fetchAllDepartment function retrieves a list of all departments that have not been deleted.
    *
    */
-  async fetchAllDepartment() {
-    const actionResponse = await DepartmentModelAction.fetchAllDepartmentAction();
-    return actionResponse;
+  async fetchAllDepartment(_parent: any, data: any, context: any) {
+    const loginUser = await context.req.user;
+    if (loginUser) {
+      const actionResponse = await DepartmentModelAction.fetchAllDepartmentAction();
+      return actionResponse;
+    } else {
+      console.log(context);
+      context.res?.http?.status(STATUS_CODE.CODE_UNAUTHORIZED);
+      return ServerError(
+        STATUS_CODE.CODE_UNAUTHORIZED,
+        'Sorry!, User has been authenticated.',
+        null
+      );
+    }
   }
 
   /**
